@@ -21,8 +21,8 @@ export const Route = createFileRoute("/portfolio")({
         { name: "description", content: description },
         { property: "og:title", content: title },
         { property: "og:description", content: description },
-        { property: "og:image", content: "https://gurumitraa.vercel.app/LongLogo.png" },
-        { property: "og:url", content: "https://gurumitraa.vercel.app/portfolio" },
+        { property: "og:image", content: "https://gurmitraa.vercel.app/LongLogo.png" },
+        { property: "og:url", content: "https://gurmitraa.vercel.app/portfolio" },
         { property: "og:type", content: "website" },
       ],
     };

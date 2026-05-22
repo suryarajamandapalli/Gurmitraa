@@ -230,40 +230,65 @@ function AdminDashboard({ onLogout }: DashboardProps) {
   useEffect(() => {
     setDbLoading(true);
 
-    const unsubGlobal = onValue(ref(db, "global"), (snapshot) => {
-      const data = snapshot.val();
-      setGlobalData(deepMerge(DEFAULT_GLOBAL, data));
-      setDbLoading(false);
-    });
+    const unsubGlobal = onValue(
+      ref(db, "global"),
+      (snapshot) => {
+        const data = snapshot.val();
+        setGlobalData(deepMerge(DEFAULT_GLOBAL, data));
+        setDbLoading(false);
+      },
+      (error) => {
+        console.error("Firebase fetch error (global):", error);
+        toast.error(`Database Error: ${error.message}. Loaded defaults.`);
+        setGlobalData(DEFAULT_GLOBAL);
+        setDbLoading(false);
+      }
+    );
 
-    const unsubSubmissions = onValue(ref(db, "submissions"), (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const list = Object.entries(data).map(([key, val]: any) => ({
-          id: key,
-          ...val,
-        }));
-        // Sort descending by timestamp
-        list.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-        setSubmissions(list);
-      } else {
+    const unsubSubmissions = onValue(
+      ref(db, "submissions"),
+      (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          const list = Object.entries(data).map(([key, val]: any) => ({
+            id: key,
+            ...val,
+          }));
+          // Sort descending by timestamp
+          list.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+          setSubmissions(list);
+        } else {
+          setSubmissions([]);
+        }
+      },
+      (error) => {
+        console.error("Firebase fetch error (submissions):", error);
+        toast.error("Failed to load submissions from database.");
         setSubmissions([]);
       }
-    });
+    );
 
-    const unsubMedia = onValue(ref(db, "media"), (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const list = Object.entries(data).map(([key, val]: any) => ({
-          id: key,
-          ...val,
-        }));
-        list.sort((a, b) => (b.uploadedAt || 0) - (a.uploadedAt || 0));
-        setMediaItems(list);
-      } else {
+    const unsubMedia = onValue(
+      ref(db, "media"),
+      (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          const list = Object.entries(data).map(([key, val]: any) => ({
+            id: key,
+            ...val,
+          }));
+          list.sort((a, b) => (b.uploadedAt || 0) - (a.uploadedAt || 0));
+          setMediaItems(list);
+        } else {
+          setMediaItems([]);
+        }
+      },
+      (error) => {
+        console.error("Firebase fetch error (media):", error);
+        toast.error("Failed to load media assets from database.");
         setMediaItems([]);
       }
-    });
+    );
 
     return () => {
       unsubGlobal();

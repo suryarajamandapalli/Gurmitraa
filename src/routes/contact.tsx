@@ -23,8 +23,8 @@ export const Route = createFileRoute("/contact")({
         { name: "description", content: description },
         { property: "og:title", content: title },
         { property: "og:description", content: description },
-        { property: "og:image", content: "https://gurumitraa.vercel.app/LongLogo.png" },
-        { property: "og:url", content: "https://gurumitraa.vercel.app/contact" },
+        { property: "og:image", content: "https://gurmitraa.vercel.app/LongLogo.png" },
+        { property: "og:url", content: "https://gurmitraa.vercel.app/contact" },
         { property: "og:type", content: "website" },
       ],
     };
