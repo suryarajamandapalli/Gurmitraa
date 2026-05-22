@@ -77,10 +77,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
             global.meta?.defaultDescription ||
             "GURMITRAA — Software product development, IT consulting, and digital solutions engineered for futuristic businesses.",
         },
-        {
-          property: "og:title",
-          content: global.meta?.defaultTitle || "GURMITRAA — In. Innovate. Imagine.",
-        },
+        { property: "og:title", content: global.meta?.defaultTitle || "GURMITRAA — In. Innovate. Imagine." },
         {
           property: "og:description",
           content:
@@ -89,7 +86,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         },
         { property: "og:type", content: "website" },
         { property: "og:site_name", content: global.logo || "GURMITRAA" },
+        { property: "og:image", content: "https://gurmitraa.vercel.app/og-image.png" },
+        { property: "og:image:width", content: "1200" },
+        { property: "og:image:height", content: "630" },
         { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:title", content: global.meta?.defaultTitle || "GURMITRAA — In. Innovate. Imagine." },
+        {
+          name: "twitter:description",
+          content:
+            global.meta?.defaultDescription ||
+            "Premium software, mobile, and digital engineering from India to the world.",
+        },
+        { name: "twitter:image", content: "https://gurmitraa.vercel.app/og-image.png" },
       ],
       links: [
         { rel: "stylesheet", href: appCss },
