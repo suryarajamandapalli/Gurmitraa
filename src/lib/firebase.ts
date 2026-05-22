@@ -5,12 +5,12 @@ import { getAuth } from "firebase/auth";
 // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBB5XJo9YlG_gvCedCKrsnl_cn3BzA8XPI",
-  authDomain: "gurmitraa.firebaseapp.com",
-  projectId: "gurmitraa",
-  storageBucket: "gurmitraa.firebasestorage.app",
+  authDomain: "gurumitraa.firebaseapp.com",
+  projectId: "gurumitraa",
+  storageBucket: "gurumitraa.firebasestorage.app",
   messagingSenderId: "79702563015",
   appId: "1:79702563015:web:6e15188f7780f112ad46e2",
-  databaseURL: "https://gurmitraa-default-rtdb.firebaseio.com",
+  databaseURL: "https://gurumitraa-default-rtdb.firebaseio.com",
 };
 
 // Initialize Firebase

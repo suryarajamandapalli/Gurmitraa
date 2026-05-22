@@ -75,17 +75,26 @@ function AdminRoute() {
   const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
-    // Check if master password is cached in localStorage
-    const masterSession = localStorage.getItem("gurmitraa_master_auth");
-    if (masterSession === "true") {
-      setIsMasterAuthenticated(true);
+    try {
+      // Check if master password is cached in localStorage
+      const masterSession = localStorage.getItem("gurmitraa_master_auth");
+      if (masterSession === "true") {
+        setIsMasterAuthenticated(true);
+      }
+    } catch (e) {
+      console.warn("Storage access failed:", e);
+    } finally {
+      setAuthLoading(false);
     }
-    setAuthLoading(false);
   }, []);
 
   const handleLogout = () => {
     setIsMasterAuthenticated(false);
-    localStorage.removeItem("gurmitraa_master_auth");
+    try {
+      localStorage.removeItem("gurmitraa_master_auth");
+    } catch (e) {
+      console.warn("Storage access failed:", e);
+    }
     toast.success("Successfully logged out");
   };
 
@@ -127,7 +136,11 @@ function AdminLogin({ onLoginSuccess }: { onLoginSuccess: () => void }) {
 
     setTimeout(() => {
       if (masterKey === MASTER_PASSWORD) {
-        localStorage.setItem("gurmitraa_master_auth", "true");
+        try {
+          localStorage.setItem("gurmitraa_master_auth", "true");
+        } catch (e) {
+          console.warn("Storage access failed:", e);
+        }
         onLoginSuccess();
         toast.success("Master Admin Access Granted");
       } else {
