@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { motion, useScroll, useTransform } from "motion/react";
+import { motion, useScroll, useTransform, AnimatePresence } from "motion/react";
 import React, { useRef, useState, useEffect } from "react";
 import * as Icons from "lucide-react";
 import {
@@ -123,6 +123,32 @@ function Home() {
   const yBg = useTransform(scrollYProgress, [0, 1], [0, 200]);
   const opacityBg = useTransform(scrollYProgress, [0, 1], [1, 0.3]);
 
+  // Floating video player states
+  const [videoPlaying, setVideoPlaying] = useState(true);
+  const [videoMuted, setVideoMuted] = useState(true);
+  const [videoVisible, setVideoVisible] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const handlePlayPause = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (videoRef.current) {
+      if (videoPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play().catch((err) => console.log("Video play failed:", err));
+      }
+      setVideoPlaying(!videoPlaying);
+    }
+  };
+
+  const handleMuteUnmute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (videoRef.current) {
+      videoRef.current.muted = !videoMuted;
+      setVideoMuted(!videoMuted);
+    }
+  };
+
   // Extract services for form select options
   const servicesSec = sections.find((s: any) => s.id === "services");
   const servicesList = servicesSec?.content?.list?.map((s: any) => s.title) || [
@@ -150,68 +176,16 @@ function Home() {
                 className="relative min-h-[100svh] -mt-20 overflow-hidden bg-navy-deep text-white"
               >
                 <motion.div style={{ y: yBg, opacity: opacityBg }} className="absolute inset-0">
-                  {(() => {
-                    const videoSrc = c.videoUrl || "/bgvideo.mp4";
-                    const ytId = getYouTubeId(videoSrc);
-                    if (ytId) {
-                      return (
-                        <>
-                          <div 
-                            className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none"
-                            style={{
-                              opacity: c.videoOpacity !== undefined ? c.videoOpacity : 0.6,
-                              filter: `blur(${c.videoBlur !== undefined ? c.videoBlur : 0}px)`,
-                            }}
-                          >
-                            <iframe
-                              src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}&controls=0&rel=0&playsinline=1&enablejsapi=1`}
-                              title="Background Video"
-                              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[177.78vh] h-[56.25vw] min-w-full min-h-full pointer-events-none"
-                              frameBorder="0"
-                              allow="autoplay; encrypted-media"
-                              allowFullScreen
-                            />
-                          </div>
-                          <div className="absolute inset-0 bg-gradient-to-t from-navy-deep/40 via-navy-deep/20 to-transparent" />
-                        </>
-                      );
-                    }
-                    if (isBgVideo(videoSrc)) {
-                      return (
-                        <>
-                          <video
-                            key={videoSrc}
-                            src={videoSrc}
-                            autoPlay
-                            loop
-                            muted
-                            playsInline
-                            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-                            style={{
-                              opacity: c.videoOpacity !== undefined ? c.videoOpacity : 0.6,
-                              filter: `blur(${c.videoBlur !== undefined ? c.videoBlur : 0}px)`,
-                            }}
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-navy-deep/40 via-navy-deep/20 to-transparent" />
-                        </>
-                      );
-                    }
-                    return (
-                      <>
-                        <img
-                          key={videoSrc}
-                          src={videoSrc}
-                          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-                          alt=""
-                          style={{
-                            opacity: c.videoOpacity !== undefined ? c.videoOpacity : 0.6,
-                            filter: `blur(${c.videoBlur !== undefined ? c.videoBlur : 0}px)`,
-                          }}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-navy-deep/40 via-navy-deep/20 to-transparent" />
-                      </>
-                    );
-                  })()}
+                  <img
+                    src={c.bgImageUrl || "/scenic_hero.png"}
+                    className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                    alt=""
+                    style={{
+                      opacity: c.videoOpacity !== undefined ? c.videoOpacity : 0.6,
+                      filter: `blur(${c.videoBlur !== undefined ? c.videoBlur : 0}px)`,
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-b from-navy-deep/60 via-navy-deep/20 to-navy-deep" />
                 </motion.div>
 
                 {/* floating particles */}
@@ -320,6 +294,132 @@ function Home() {
                     </Link>
                   </motion.div>
                 </div>
+
+                {/* Floating Video Player */}
+                <AnimatePresence>
+                  {videoVisible ? (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                      className="absolute bottom-28 right-4 md:right-8 z-30 w-[280px] md:w-[340px] bg-navy-deep/95 border border-white/10 rounded-2xl overflow-hidden shadow-2xl glass-dark group"
+                    >
+                      <div className="relative aspect-video w-full bg-black">
+                        {(() => {
+                          const videoSrc = c.videoUrl || "/bgvideo.mp4";
+                          const ytId = getYouTubeId(videoSrc);
+                          if (ytId) {
+                            return (
+                              <iframe
+                                src={`https://www.youtube.com/embed/${ytId}?autoplay=${videoPlaying ? 1 : 0}&mute=${videoMuted ? 1 : 0}&loop=1&playlist=${ytId}&controls=1&rel=0&playsinline=1`}
+                                title="Promo Video"
+                                className="w-full h-full"
+                                frameBorder="0"
+                                allow="autoplay; encrypted-media"
+                                allowFullScreen
+                              />
+                            );
+                          }
+                          if (isBgVideo(videoSrc)) {
+                            return (
+                              <video
+                                ref={videoRef}
+                                src={videoSrc}
+                                autoPlay
+                                loop
+                                muted={videoMuted}
+                                playsInline
+                                className="w-full h-full object-cover"
+                              />
+                            );
+                          }
+                          return (
+                            <div className="flex h-full items-center justify-center text-white/50 text-xs">
+                              No video content
+                            </div>
+                          );
+                        })()}
+
+                        {/* Dismiss/Close Button */}
+                        <div className="absolute top-2 right-2 z-20">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setVideoVisible(false);
+                            }}
+                            className="p-1.5 rounded-full bg-black/60 hover:bg-black/85 text-white/80 hover:text-white transition-colors"
+                            title="Close Video"
+                          >
+                            <Icons.X size={14} />
+                          </button>
+                        </div>
+
+                        {/* Interactive overlay for HTML5 controls */}
+                        {!getYouTubeId(c.videoUrl || "/bgvideo.mp4") && isBgVideo(c.videoUrl || "/bgvideo.mp4") && (
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/35 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3 z-10">
+                            <div className="flex justify-between items-center w-full">
+                              <button
+                                onClick={handlePlayPause}
+                                className="p-2 rounded-full bg-orange hover:bg-orange/90 text-white transition active:scale-95 flex items-center justify-center"
+                                title={videoPlaying ? "Pause" : "Play"}
+                              >
+                                {videoPlaying ? <Icons.Pause size={14} /> : <Icons.Play size={14} />}
+                              </button>
+                              <button
+                                onClick={handleMuteUnmute}
+                                className="p-2 rounded-full bg-white/20 hover:bg-white/35 text-white transition flex items-center justify-center"
+                                title={videoMuted ? "Unmute" : "Mute"}
+                              >
+                                {videoMuted ? <Icons.VolumeX size={14} /> : <Icons.Volume2 size={14} />}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Header bar / Title card */}
+                      <div className="px-4 py-3 flex items-center justify-between bg-black/40 backdrop-blur-sm border-t border-white/5">
+                        <div className="flex items-center gap-2">
+                          <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-orange"></span>
+                          </span>
+                          <span className="text-xs font-semibold tracking-wide text-white/90">
+                            Watch Gurmitraa Promo
+                          </span>
+                        </div>
+                        {/* Status indicators */}
+                        {!getYouTubeId(c.videoUrl || "/bgvideo.mp4") && isBgVideo(c.videoUrl || "/bgvideo.mp4") && (
+                          <div className="flex items-center gap-2 text-white/60">
+                            <button
+                              onClick={handlePlayPause}
+                              className="hover:text-white transition p-0.5"
+                            >
+                              {videoPlaying ? <Icons.Pause size={12} /> : <Icons.Play size={12} />}
+                            </button>
+                            <button
+                              onClick={handleMuteUnmute}
+                              className="hover:text-white transition p-0.5"
+                            >
+                              {videoMuted ? <Icons.VolumeX size={12} /> : <Icons.Volume2 size={12} />}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.button
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      onClick={() => setVideoVisible(true)}
+                      className="absolute bottom-28 right-4 md:right-8 z-30 flex items-center gap-2 bg-orange hover:bg-orange/90 text-white px-4 py-3 rounded-full shadow-lg border border-white/20 font-semibold text-xs tracking-wider uppercase transition active:scale-95 group glow-orange"
+                    >
+                      <Icons.Tv size={14} className="group-hover:rotate-6 transition-transform" />
+                      Watch Promo
+                    </motion.button>
+                  )}
+                </AnimatePresence>
 
                 {/* marquee */}
                 <div className="relative border-y border-white/10 bg-black/30 overflow-hidden">

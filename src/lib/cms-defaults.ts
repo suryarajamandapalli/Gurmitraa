@@ -61,6 +61,7 @@ export const DEFAULT_HOME = {
         titleItalic: "Digital",
         titleMiddle: " Solutions for the ",
         titleSuffix: "Future.",
+        bgImageUrl: "/scenic_hero.png",
         videoUrl: "/bgvideo.mp4",
         videoOpacity: 0.6,
         videoBlur: 0,
