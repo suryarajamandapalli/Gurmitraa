@@ -254,11 +254,11 @@ export const DEFAULT_ABOUT = {
       order: 0,
       content: {
         eyebrow: "About us",
-        title: "A studio engineering ",
+        title: "A perfect team that engineering",
         titleItalic: "tomorrow's",
         titleSuffix: " software, today.",
         description:
-          "GURMITRAA is a product, design and engineering studio based in India, partnering with founders and enterprises around the world. We believe great software is born from craft, courage, and obsessive care.",
+          "GURMITRAA is a product, design and engineering Innovative team based in India, partnering with founders and enterprises around the world. We believe great software is born from craft, courage, and obsessive care.",
       },
     },
     {
@@ -267,7 +267,7 @@ export const DEFAULT_ABOUT = {
       active: true,
       order: 1,
       content: {
-        eyebrow: "Our story",
+        eyebrow: "Who we are",
         title: "Started with one idea: ",
         titleItalic: "make software that matters",
         titleSuffix: ".",
