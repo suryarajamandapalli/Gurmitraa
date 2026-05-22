@@ -461,6 +461,7 @@ function Home() {
                     <p className="mt-6 text-lg text-muted-foreground leading-relaxed">
                       {c.description}
                     </p>
+                    {/* Stats section (commented out until real data is available)
                     <div className="grid grid-cols-2 gap-8 mt-12">
                       {(c.stats || []).map((s: any) => (
                         <div key={s.label}>
@@ -473,6 +474,7 @@ function Home() {
                         </div>
                       ))}
                     </div>
+                    */}
                   </Reveal>
 
                   <Reveal delay={0.1}>
