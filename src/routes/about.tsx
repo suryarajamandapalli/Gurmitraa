@@ -13,15 +13,17 @@ export const Route = createFileRoute("/about")({
   },
   head: ({ loaderData }) => {
     const page = loaderData?.pageData || DEFAULT_ABOUT;
+    const title = page.seo?.title || "About — GURMITRAA";
+    const description = page.seo?.description || "GURMITRAA is a software product development and IT consulting studio from India. Meet the team behind the craft.";
     return {
       meta: [
-        { title: page.seo?.title || "About — GURMITRAA" },
-        {
-          name: "description",
-          content:
-            page.seo?.description ||
-            "GURMITRAA is a software product development and IT consulting studio from India. Meet the team behind the craft.",
-        },
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:image", content: "https://gurumitraa.vercel.app/LongLogo.png" },
+        { property: "og:url", content: "https://gurumitraa.vercel.app/about" },
+        { property: "og:type", content: "website" },
       ],
     };
   },

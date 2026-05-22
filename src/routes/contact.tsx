@@ -15,15 +15,17 @@ export const Route = createFileRoute("/contact")({
   },
   head: ({ loaderData }) => {
     const page = loaderData?.pageData || DEFAULT_CONTACT;
+    const title = page.seo?.title || "Contact — GURMITRAA";
+    const description = page.seo?.description || "Get in touch with GURMITRAA — start a project, request a demo, or join our team.";
     return {
       meta: [
-        { title: page.seo?.title || "Contact — GURMITRAA" },
-        {
-          name: "description",
-          content:
-            page.seo?.description ||
-            "Get in touch with GURMITRAA — start a project, request a demo, or join our team.",
-        },
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:image", content: "https://gurumitraa.vercel.app/LongLogo.png" },
+        { property: "og:url", content: "https://gurumitraa.vercel.app/contact" },
+        { property: "og:type", content: "website" },
       ],
     };
   },

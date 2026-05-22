@@ -26,18 +26,17 @@ export const Route = createFileRoute("/")({
   },
   head: ({ loaderData }) => {
     const page = loaderData?.pageData || DEFAULT_HOME;
+    const title = page.seo?.title || "GURMITRAA — Innovative Digital Solutions For Future Businesses";
+    const description = page.seo?.description || "Software product development, mobile apps, IT consulting, and digital experiences engineered with craft. In. Innovate. Imagine.";
     return {
       meta: [
-        {
-          title:
-            page.seo?.title || "GURMITRAA — Innovative Digital Solutions For Future Businesses",
-        },
-        {
-          name: "description",
-          content:
-            page.seo?.description ||
-            "Software product development, mobile apps, IT consulting, and digital experiences engineered with craft. In. Innovate. Imagine.",
-        },
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:image", content: "https://gurumitraa.vercel.app/LongLogo.png" },
+        { property: "og:url", content: "https://gurumitraa.vercel.app/" },
+        { property: "og:type", content: "website" },
       ],
     };
   },

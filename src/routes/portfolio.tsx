@@ -13,15 +13,17 @@ export const Route = createFileRoute("/portfolio")({
   },
   head: ({ loaderData }) => {
     const page = loaderData?.pageData || DEFAULT_PORTFOLIO;
+    const title = page.seo?.title || "Portfolio — GURMITRAA";
+    const description = page.seo?.description || "Selected work from GURMITRAA — case studies across fintech, SaaS, healthcare, ecommerce and AI.";
     return {
       meta: [
-        { title: page.seo?.title || "Portfolio — GURMITRAA" },
-        {
-          name: "description",
-          content:
-            page.seo?.description ||
-            "Selected work from GURMITRAA — case studies across fintech, SaaS, healthcare, ecommerce and AI.",
-        },
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:image", content: "https://gurumitraa.vercel.app/LongLogo.png" },
+        { property: "og:url", content: "https://gurumitraa.vercel.app/portfolio" },
+        { property: "og:type", content: "website" },
       ],
     };
   },

@@ -13,15 +13,17 @@ export const Route = createFileRoute("/services")({
   },
   head: ({ loaderData }) => {
     const page = loaderData?.pageData || DEFAULT_SERVICES;
+    const title = page.seo?.title || "Services — GURMITRAA";
+    const description = page.seo?.description || "Web, mobile, product, consulting, cloud and ecommerce — full-stack digital services delivered with craft.";
     return {
       meta: [
-        { title: page.seo?.title || "Services — GURMITRAA" },
-        {
-          name: "description",
-          content:
-            page.seo?.description ||
-            "Web, mobile, product, consulting, cloud and ecommerce — full-stack digital services delivered with craft.",
-        },
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:image", content: "https://gurumitraa.vercel.app/LongLogo.png" },
+        { property: "og:url", content: "https://gurumitraa.vercel.app/services" },
+        { property: "og:type", content: "website" },
       ],
     };
   },

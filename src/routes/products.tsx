@@ -12,15 +12,17 @@ export const Route = createFileRoute("/products")({
   },
   head: ({ loaderData }) => {
     const page = loaderData?.pageData || DEFAULT_PRODUCTS;
+    const title = page.seo?.title || "Products — GURMITRAA";
+    const description = page.seo?.description || "Modern SaaS products engineered by GURMITRAA — for commerce, analytics, learning, healthcare and finance.";
     return {
       meta: [
-        { title: page.seo?.title || "Products — GURMITRAA" },
-        {
-          name: "description",
-          content:
-            page.seo?.description ||
-            "Modern SaaS products engineered by GURMITRAA — for commerce, analytics, learning, healthcare and finance.",
-        },
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:image", content: "https://gurumitraa.vercel.app/LongLogo.png" },
+        { property: "og:url", content: "https://gurumitraa.vercel.app/products" },
+        { property: "og:type", content: "website" },
       ],
     };
   },
