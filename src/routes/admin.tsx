@@ -960,6 +960,34 @@ function PagesManager({
     await saveNewPageOrder(updatedKeys);
   };
 
+  const togglePageVisibility = async (key: string) => {
+    try {
+      const hrefToKey: Record<string, string> = {
+        "/": "home",
+        "/about": "about",
+        "/services": "services",
+        "/products": "products",
+        "/portfolio": "portfolio",
+        "/contact": "contact",
+      };
+      
+      const currentNavbar = globalData?.navbar || DEFAULT_GLOBAL.navbar;
+      const updatedNavbar = currentNavbar.map((link: any) => {
+        const linkKey = hrefToKey[link.href];
+        if (linkKey === key) {
+          return { ...link, hidden: !link.hidden };
+        }
+        return link;
+      });
+      
+      await set(ref(db, "global/navbar"), updatedNavbar);
+      toast.success("Page visibility updated successfully!");
+    } catch (err: any) {
+      console.error("Failed to toggle page visibility:", err);
+      toast.error("Failed to update page visibility");
+    }
+  };
+
   // Sync real-time page content from database
   useEffect(() => {
     setPageState(null);
@@ -1114,6 +1142,18 @@ function PagesManager({
             const isDragging = draggedIndex === index;
             const isOver = dragOverIndex === index;
 
+            const currentNavbar = globalData?.navbar || DEFAULT_GLOBAL.navbar;
+            const hrefToKey: Record<string, string> = {
+              "/": "home",
+              "/about": "about",
+              "/services": "services",
+              "/products": "products",
+              "/portfolio": "portfolio",
+              "/contact": "contact",
+            };
+            const navItem = currentNavbar.find((l: any) => hrefToKey[l.href] === key);
+            const isHidden = navItem ? !!navItem.hidden : false;
+
             return (
               <motion.div
                 layout
@@ -1135,6 +1175,23 @@ function PagesManager({
                 <div className="text-white/30 hover:text-white/60">
                   <Icons.GripVertical size={14} />
                 </div>
+
+                {/* Visibility Toggle Button */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    togglePageVisibility(key);
+                  }}
+                  className={`p-1 rounded-md transition-colors ${
+                    isHidden
+                      ? "text-red-400 hover:text-red-300 hover:bg-white/5"
+                      : "text-white/40 hover:text-emerald-400 hover:bg-white/5"
+                  }`}
+                  title={isHidden ? "Show in Navigation" : "Hide from Navigation"}
+                >
+                  {isHidden ? <Icons.EyeOff size={14} /> : <Icons.Eye size={14} />}
+                </button>
 
                 <span
                   onClick={() => setSelectedPage(key as any)}

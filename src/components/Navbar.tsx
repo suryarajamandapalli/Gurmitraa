@@ -10,7 +10,9 @@ export function Navbar() {
   const logoText = global.logo || "GURMITRAA";
   const logoLetter = logoText.charAt(0).toUpperCase();
   const navLinks = global.navbar || DEFAULT_GLOBAL.navbar;
-  const links = navLinks.map((l) => ({ to: l.href, label: l.label }));
+  const links = navLinks
+    .filter((l: any) => !l.hidden)
+    .map((l) => ({ to: l.href, label: l.label }));
 
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [scrolled, setScrolled] = useState(false);
