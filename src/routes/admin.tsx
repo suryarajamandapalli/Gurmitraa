@@ -449,7 +449,9 @@ function AdminDashboard({ onLogout }: DashboardProps) {
                   openMediaPicker={openMediaPicker}
                 />
               )}
-              {activeTab === "pages" && <PagesManager openMediaPicker={openMediaPicker} />}
+              {activeTab === "pages" && (
+                <PagesManager openMediaPicker={openMediaPicker} globalData={globalData} />
+              )}
               {activeTab === "media" && (
                 <MediaManager
                   mediaItems={mediaItems}
@@ -833,13 +835,130 @@ function GlobalConfigManager({
 /* ==========================================
    PAGES MANAGER
    ========================================== */
-function PagesManager({ openMediaPicker }: { openMediaPicker: any }) {
+function PagesManager({
+  openMediaPicker,
+  globalData,
+}: {
+  openMediaPicker: any;
+  globalData: any;
+}) {
   const [selectedPage, setSelectedPage] = useState<keyof typeof PAGE_CONFIGS>("home");
   const [pageState, setPageState] = useState<any>(null);
   const [initialDbData, setInitialDbData] = useState<any>(null);
   const [hasUnsaved, setHasUnsaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingSectionIndex, setEditingSectionIndex] = useState<number | null>(null);
+
+  // Drag and Drop ordering state
+  const [pageKeys, setPageKeys] = useState<string[]>([]);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    const hrefToKey: Record<string, string> = {
+      "/": "home",
+      "/about": "about",
+      "/services": "services",
+      "/products": "products",
+      "/portfolio": "portfolio",
+      "/contact": "contact",
+    };
+    const defaultKeys = ["home", "about", "services", "products", "portfolio", "contact"];
+    
+    if (globalData?.navbar) {
+      const keysFromNavbar = globalData.navbar
+        .map((l: any) => hrefToKey[l.href])
+        .filter(Boolean);
+      const mergedKeys = [...new Set([...keysFromNavbar, ...defaultKeys])];
+      setPageKeys(mergedKeys);
+    } else {
+      setPageKeys(defaultKeys);
+    }
+  }, [globalData]);
+
+  const saveNewPageOrder = async (newPageKeys: string[]) => {
+    try {
+      const hrefToKey: Record<string, string> = {
+        "/": "home",
+        "/about": "about",
+        "/services": "services",
+        "/products": "products",
+        "/portfolio": "portfolio",
+        "/contact": "contact",
+      };
+      
+      const currentNavbar = globalData?.navbar || DEFAULT_GLOBAL.navbar;
+      const linksByKey: Record<string, any> = {};
+      currentNavbar.forEach((link: any) => {
+        const key = hrefToKey[link.href];
+        if (key) {
+          linksByKey[key] = link;
+        }
+      });
+      
+      const newNavbar: any[] = [];
+      newPageKeys.forEach((key) => {
+        if (linksByKey[key]) {
+          newNavbar.push(linksByKey[key]);
+        } else {
+          const defaultLink = DEFAULT_GLOBAL.navbar.find((l: any) => hrefToKey[l.href] === key);
+          if (defaultLink) {
+            newNavbar.push(defaultLink);
+          }
+        }
+      });
+      
+      await set(ref(db, "global/navbar"), newNavbar);
+      toast.success("Navigation menu reordered successfully!");
+    } catch (err: any) {
+      console.error("Failed to save page order:", err);
+      toast.error("Failed to save page order to database");
+    }
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+    setDragOverIndex(index);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === targetIndex) return;
+
+    const updatedKeys = [...pageKeys];
+    const [draggedKey] = updatedKeys.splice(draggedIndex, 1);
+    updatedKeys.splice(targetIndex, 0, draggedKey);
+
+    setPageKeys(updatedKeys);
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+
+    await saveNewPageOrder(updatedKeys);
+  };
+
+  const movePageKey = async (index: number, direction: "left" | "right") => {
+    const targetIndex = direction === "left" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= pageKeys.length) return;
+    
+    const updatedKeys = [...pageKeys];
+    const temp = updatedKeys[index];
+    updatedKeys[index] = updatedKeys[targetIndex];
+    updatedKeys[targetIndex] = temp;
+    
+    setPageKeys(updatedKeys);
+    await saveNewPageOrder(updatedKeys);
+  };
 
   // Sync real-time page content from database
   useEffect(() => {
@@ -977,21 +1096,78 @@ function PagesManager({ openMediaPicker }: { openMediaPicker: any }) {
 
   return (
     <div className="space-y-6">
-      {/* Top Page Selector Bar */}
-      <div className="flex flex-wrap gap-2 border-b border-white/10 pb-4">
-        {Object.entries(PAGE_CONFIGS).map(([key, config]) => (
-          <button
-            key={key}
-            onClick={() => setSelectedPage(key as any)}
-            className={`px-4 py-2.5 rounded-md text-sm font-semibold transition ${
-              selectedPage === key
-                ? "bg-orange text-white shadow-md shadow-orange/10"
-                : "bg-white/5 border border-white/5 hover:bg-white/10 text-white/70"
-            }`}
-          >
-            {config.label}
-          </button>
-        ))}
+      {/* Top Page Selector Bar & Drag Reordering */}
+      <div className="border-b border-white/10 pb-4">
+        <div className="mb-3">
+          <h4 className="text-xs uppercase tracking-widest text-white/50 font-semibold">
+            Pages & Navigation Order
+          </h4>
+          <p className="text-[10px] text-white/30 mt-1">
+            Drag tabs or use arrows to reorder pages and update the main website navigation menu instantly.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          {pageKeys.map((key, index) => {
+            const config = PAGE_CONFIGS[key as keyof typeof PAGE_CONFIGS];
+            if (!config) return null;
+            const isSelected = selectedPage === key;
+            const isDragging = draggedIndex === index;
+            const isOver = dragOverIndex === index;
+
+            return (
+              <motion.div
+                layout
+                key={key}
+                draggable
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragEnd={handleDragEnd}
+                onDrop={(e) => handleDrop(e, index)}
+                className={`relative flex items-center gap-2 px-3.5 py-2 rounded-md text-sm font-semibold transition-all select-none ${
+                  isSelected
+                    ? "bg-orange text-white shadow-md shadow-orange/15"
+                    : "bg-white/5 border border-white/5 hover:bg-white/10 text-white/70"
+                } ${isDragging ? "opacity-30 border-dashed border-orange" : ""} ${
+                  isOver ? "border-orange border-2 scale-105" : ""
+                } cursor-grab active:cursor-grabbing`}
+              >
+                {/* Drag handle */}
+                <div className="text-white/30 hover:text-white/60">
+                  <Icons.GripVertical size={14} />
+                </div>
+
+                <span
+                  onClick={() => setSelectedPage(key as any)}
+                  className="cursor-pointer flex-1"
+                >
+                  {config.label}
+                </span>
+
+                {/* Arrow buttons for mobile and accessibility */}
+                <div className="flex items-center gap-0.5 ml-2 border-l border-white/10 pl-2">
+                  <button
+                    type="button"
+                    disabled={index === 0}
+                    onClick={() => movePageKey(index, "left")}
+                    className="text-white/30 hover:text-white disabled:opacity-20 disabled:pointer-events-none p-0.5"
+                    title="Move Left"
+                  >
+                    <Icons.ChevronLeft size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    disabled={index === pageKeys.length - 1}
+                    onClick={() => movePageKey(index, "right")}
+                    className="text-white/30 hover:text-white disabled:opacity-20 disabled:pointer-events-none p-0.5"
+                    title="Move Right"
+                  >
+                    <Icons.ChevronRight size={14} />
+                  </button>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
       </div>
 
       {hasUnsaved && (
