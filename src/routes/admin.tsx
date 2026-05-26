@@ -1703,6 +1703,9 @@ function RecursiveCmsFieldEditor({
     if (key === "v") return "Display Value";
     if (key === "y") return "Timeline Year";
     if (key === "c") return "Category";
+    if (key === "ceoImage") return "CEO Photo Image";
+    if (key === "ceoTalk") return "CEO Quote / Message (CEO Talk)";
+    if (key === "ceoName") return "CEO Name & Title";
 
     const result = key.replace(/([A-Z])/g, " $1");
     return result.charAt(0).toUpperCase() + result.slice(1);
@@ -1938,6 +1941,7 @@ function RecursiveCmsFieldEditor({
     fieldName.toLowerCase() === "a" ||
     fieldName.toLowerCase() === "message" ||
     fieldName.toLowerCase() === "visiontext" ||
+    fieldName.toLowerCase() === "ceotalk" ||
     fieldName.toLowerCase() === "missiontext";
 
   if (isColor) {

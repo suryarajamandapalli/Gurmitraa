@@ -70,7 +70,7 @@ function About() {
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="text-xs uppercase tracking-[0.3em] text-orange mb-6"
+                      className="text-xs uppercase tracking-[0.3em] text-[#ff9f43] mb-6"
                     >
                       {c.eyebrow}
                     </motion.div>
@@ -128,9 +128,9 @@ function About() {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-navy-deep via-navy-deep/80 to-transparent" />
                       <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_70%,rgba(255,122,0,0.35),transparent_55%)]" />
-                      <div className="absolute inset-0 grid place-items-center">
+                      <div className="absolute inset-0 flex flex-col justify-end pb-16">
                         <div className="font-display text-white text-center px-8 z-10">
-                          <div className="text-orange text-sm tracking-[0.4em]">EST. 2013</div>
+                          <div className="text-[#ff9f43] text-sm tracking-[0.4em]">EST. 2013</div>
                           <div className="mt-4 text-5xl font-bold">{c.yearsText}</div>
                           <div className="mt-2 text-white/60 text-sm">{c.yearsSub}</div>
                         </div>
@@ -306,20 +306,48 @@ function About() {
 
           case "cta":
             return (
-              <section key={section.id} className="py-20 bg-mist">
-                <div className="mx-auto max-w-5xl px-6 text-center">
-                  {c.icon && React.createElement((Icons as any)[c.icon] || Icons.Award, { className: "text-orange mx-auto mb-6", size: 40 })}
-                  <h2 className="font-display text-4xl md:text-5xl font-bold text-balance">
-                    {c.title}
-                    <GradientItalic text={c.titleItalic} />
-                    {c.titleSuffix}
-                  </h2>
-                  <Link
-                    to={c.ctaLink}
-                    className="mt-8 inline-flex items-center gap-2 rounded-full bg-orange px-7 py-4 font-semibold text-white glow-orange"
-                  >
-                    {c.ctaText} <Icons.ArrowRight size={18} />
-                  </Link>
+              <section key={section.id} className="py-20 bg-mist overflow-hidden">
+                <div className="mx-auto max-w-7xl px-6 grid md:grid-cols-12 gap-12 items-center">
+                  <div className="md:col-span-7 text-left space-y-6">
+                    <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-balance text-navy-deep leading-tight">
+                      {c.title}
+                      <GradientItalic text={c.titleItalic} />
+                      {c.titleSuffix}
+                    </h2>
+                    
+                    {c.ceoTalk && (
+                      <div className="relative pl-6 border-l-2 border-orange my-6">
+                        <Icons.Quote className="absolute -left-3 -top-3 text-orange/10 h-10 w-10 pointer-events-none" />
+                        <p className="text-lg italic text-muted-foreground leading-relaxed">
+                          "{c.ceoTalk}"
+                        </p>
+                        {c.ceoName && (
+                          <div className="mt-2 text-sm font-semibold text-navy-deep">
+                            — {c.ceoName}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div>
+                      <Link
+                        to={c.ctaLink}
+                        className="inline-flex items-center gap-2 rounded-full bg-orange px-7 py-4 font-semibold text-white glow-orange hover:bg-orange-glow transition"
+                      >
+                        {c.ctaText} <Icons.ArrowRight size={18} />
+                      </Link>
+                    </div>
+                  </div>
+                  
+                  <div className="md:col-span-5 flex justify-center">
+                    <div className="relative w-full max-w-sm aspect-[4/5] rounded-3xl overflow-hidden shadow-elegant border border-border">
+                      <img
+                        src={c.ceoImage || "/images/ceo.png"}
+                        alt={c.ceoName || "CEO"}
+                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                      />
+                    </div>
+                  </div>
                 </div>
               </section>
             );

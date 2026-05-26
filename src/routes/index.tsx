@@ -213,7 +213,7 @@ function Home() {
                     transition={{ duration: 0.8 }}
                     className="inline-flex items-center gap-3 rounded-full glass px-4 py-2 text-xs uppercase tracking-[0.25em] mb-8"
                   >
-                    <span className="h-1.5 w-1.5 rounded-full bg-orange animate-pulse" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#ff9f43] animate-pulse" />
                     {c.eyebrow || "In · Innovate · Imagine"}
                   </motion.div>
 
@@ -447,7 +447,7 @@ function Home() {
 
           case "about":
             return (
-              <section key={section.id} className="relative py-20 bg-background overflow-hidden">
+              <section key={section.id} id={section.id} className="relative py-20 bg-background overflow-hidden">
                 <div className="mx-auto max-w-7xl px-6 grid lg:grid-cols-2 gap-16 items-center">
                   <Reveal>
                     <div className="text-xs font-semibold uppercase tracking-[0.25em] text-orange mb-5">
@@ -510,6 +510,7 @@ function Home() {
             return (
               <section
                 key={section.id}
+                id={section.id}
                 className="relative py-20 bg-navy-deep text-white overflow-hidden"
               >
                 <div className="absolute inset-0 grid-bg opacity-50" />
@@ -558,7 +559,7 @@ function Home() {
 
           case "process":
             return (
-              <section key={section.id} className="relative py-20 bg-background overflow-hidden">
+              <section key={section.id} id={section.id} className="relative py-20 bg-background overflow-hidden">
                 <div className="mx-auto max-w-7xl px-6">
                   <SectionHeader
                     eyebrow={c.eyebrow}
@@ -602,7 +603,7 @@ function Home() {
 
           case "recent_works":
             return (
-              <section key={section.id} className="relative py-20 bg-mist overflow-hidden">
+              <section key={section.id} id={section.id} className="relative py-20 bg-mist overflow-hidden">
                 <div className="mx-auto max-w-7xl px-6">
                   <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-16 gap-6">
                     <SectionHeader
@@ -677,6 +678,7 @@ function Home() {
             return (
               <section
                 key={section.id}
+                id={section.id}
                 className="relative py-20 bg-navy-deep text-white overflow-hidden"
               >
                 <div className="absolute inset-0 grid-bg opacity-40" />
@@ -743,7 +745,7 @@ function Home() {
 
           case "enquiry":
             return (
-              <section key={section.id} className="relative py-20 bg-background overflow-hidden">
+              <section key={section.id} id={section.id} className="relative py-20 bg-background overflow-hidden">
                 <div className="mx-auto max-w-5xl px-6">
                   <SectionHeader
                     eyebrow={c.eyebrow}

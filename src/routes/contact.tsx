@@ -82,7 +82,7 @@ function Contact() {
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_left,rgba(255,122,0,0.25),transparent_55%)]" />
                 <div className="relative mx-auto max-w-7xl px-6 grid lg:grid-cols-12 gap-12">
                   <div className="lg:col-span-8">
-                    <div className="text-xs uppercase tracking-[0.3em] text-orange mb-6">
+                    <div className="text-xs uppercase tracking-[0.3em] text-[#ff9f43] mb-6">
                       {c.eyebrow}
                     </div>
                     <motion.h1
@@ -102,7 +102,7 @@ function Contact() {
 
           case "form_section":
             return (
-              <section key={section.id} className="py-20 bg-background">
+              <section key={section.id} id="enquiry" className="py-20 bg-background">
                 <div className="mx-auto max-w-7xl px-6 flex flex-col gap-12">
                   <Reveal>
                     <div className="bg-card border border-border rounded-3xl p-5 sm:p-8 lg:p-10">
@@ -114,7 +114,7 @@ function Contact() {
                   </Reveal>
 
                   <Reveal delay={0.1}>
-                    <div className="flex flex-col gap-8">
+                    <div id="contact-info" className="flex flex-col gap-8">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {[
                           {
@@ -246,7 +246,7 @@ function Contact() {
         <Icons.MessageCircle size={22} />
       </a>
       <a
-        href={`tel:${phoneClean}`}
+        href="#contact-info"
         className="fixed bottom-24 right-6 z-40 h-14 w-14 rounded-full bg-orange grid place-items-center text-white shadow-xl hover:scale-110 transition"
       >
         <Icons.Phone size={20} />

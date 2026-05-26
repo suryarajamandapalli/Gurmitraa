@@ -90,6 +90,7 @@ export function Navbar() {
           <div className="hidden lg:block">
             <Link
               to="/contact"
+              hash="enquiry"
               className="group relative inline-flex items-center gap-2 rounded-full bg-orange px-5 py-2.5 text-sm font-semibold text-white overflow-hidden"
             >
               <span className="relative z-10">Start a project</span>

@@ -69,7 +69,7 @@ function Services() {
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="text-xs uppercase tracking-[0.3em] text-orange mb-6"
+                    className="text-xs uppercase tracking-[0.3em] text-[#ff9f43] mb-6"
                   >
                     {c.eyebrow}
                   </motion.div>

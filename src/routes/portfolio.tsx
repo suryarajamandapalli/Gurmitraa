@@ -79,7 +79,7 @@ function Portfolio() {
                 <div className="absolute inset-0 grid-bg opacity-60" />
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_right,rgba(255,122,0,0.25),transparent_55%)]" />
                 <div className="relative mx-auto max-w-7xl px-6">
-                  <div className="text-xs uppercase tracking-[0.3em] text-orange mb-6">
+                  <div className="text-xs uppercase tracking-[0.3em] text-[#ff9f43] mb-6">
                     {c.eyebrow}
                   </div>
                   <motion.h1

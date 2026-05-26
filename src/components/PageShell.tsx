@@ -35,8 +35,8 @@ export function SectionHeader({
           viewport={{ once: true, margin: "-80px" }}
           className="inline-flex items-center gap-2 mb-5"
         >
-          <span className="h-px w-8 bg-orange" />
-          <span className="text-xs font-semibold uppercase tracking-[0.25em] text-orange">
+          <span className={`h-px w-8 ${light ? "bg-[#ff9f43]" : "bg-orange"}`} />
+          <span className={`text-xs font-semibold uppercase tracking-[0.25em] ${light ? "text-[#ff9f43]" : "text-orange"}`}>
             {eyebrow}
           </span>
         </motion.div>
