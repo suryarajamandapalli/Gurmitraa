@@ -29,23 +29,23 @@ export function Footer() {
   const logoLetter = logoText.charAt(0).toUpperCase();
 
   return (
-    <footer className="relative overflow-hidden bg-navy-deep text-white">
-      <div className="absolute inset-0 grid-bg opacity-50" />
+    <footer className="relative overflow-hidden bg-mist border-t border-border text-navy-deep">
+      <div className="absolute inset-0 grid-bg-light opacity-50" />
       <motion.div
         aria-hidden
         animate={{ x: [0, 60, 0], y: [0, -40, 0] }}
         transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-orange/20 blur-[120px]"
+        className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-orange/10 blur-[120px]"
       />
       <motion.div
         aria-hidden
         animate={{ x: [0, -50, 0], y: [0, 60, 0] }}
         transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-blue-500/10 blur-[120px]"
+        className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-blue-500/5 blur-[120px]"
       />
 
       <div className="relative mx-auto max-w-7xl px-6 pt-24 pb-10">
-        <div className="grid lg:grid-cols-12 gap-12 pb-16 border-b border-white/10">
+        <div className="grid lg:grid-cols-12 gap-12 pb-16 border-b border-border">
           <div className="lg:col-span-5">
             <Link to="/" className="flex items-center gap-2 mb-6">
               {global.longLogoUrl ? (
@@ -64,11 +64,11 @@ export function Footer() {
                 </>
               )}
             </Link>
-            <p className="text-white/60 max-w-md leading-relaxed mb-6">
+            <p className="text-muted-foreground max-w-md leading-relaxed mb-6">
               In... Innovate... Imagine... — Engineering the future of digital products with craft,
               intelligence, and obsession for detail.
             </p>
-            <div className="space-y-3 text-sm text-white/70">
+            <div className="space-y-3 text-sm text-muted-foreground">
               <div className="flex items-center gap-3">
                 <MapPin size={16} className="text-orange" />
                 {global.footer?.contactDetails?.address || "Bengaluru, India"}
@@ -88,19 +88,19 @@ export function Footer() {
             <h4 className="font-display font-semibold mb-4 text-sm uppercase tracking-widest text-orange">
               Company
             </h4>
-            <ul className="space-y-3 text-sm text-white/70">
+            <ul className="space-y-3 text-sm text-muted-foreground">
               <li>
-                <Link to="/about" className="hover:text-white">
+                <Link to="/about" className="hover:text-orange transition-colors">
                   About Us
                 </Link>
               </li>
               <li>
-                <Link to="/portfolio" className="hover:text-white">
+                <Link to="/portfolio" className="hover:text-orange transition-colors">
                   Portfolio
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="hover:text-white">
+                <Link to="/contact" className="hover:text-orange transition-colors">
                   Contact
                 </Link>
               </li>
@@ -112,24 +112,24 @@ export function Footer() {
             <h4 className="font-display font-semibold mb-4 text-sm uppercase tracking-widest text-orange">
               Services
             </h4>
-            <ul className="space-y-3 text-sm text-white/70">
+            <ul className="space-y-3 text-sm text-muted-foreground">
               <li>
-                <Link to="/services" className="hover:text-white">
+                <Link to="/services" className="hover:text-orange transition-colors">
                   Web Apps
                 </Link>
               </li>
               <li>
-                <Link to="/services" className="hover:text-white">
+                <Link to="/services" className="hover:text-orange transition-colors">
                   Mobile Apps
                 </Link>
               </li>
               <li>
-                <Link to="/services" className="hover:text-white">
+                <Link to="/services" className="hover:text-orange transition-colors">
                   Consulting
                 </Link>
               </li>
               <li>
-                <Link to="/products" className="hover:text-white">
+                <Link to="/products" className="hover:text-orange transition-colors">
                   Products
                 </Link>
               </li>
@@ -149,7 +149,7 @@ export function Footer() {
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="h-9 w-9 grid place-items-center rounded-full bg-white/5 hover:bg-orange transition"
+                    className="h-9 w-9 grid place-items-center rounded-full bg-card border border-border text-navy-deep hover:bg-orange hover:text-white hover:border-orange transition"
                   >
                     <Icon size={15} />
                   </a>
@@ -159,13 +159,13 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-8 text-xs text-white/40">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-8 text-xs text-muted-foreground/60">
           <span>
             {global.footer?.copyright ||
               `© ${new Date().getFullYear()} GURMITRAA. All rights reserved.`}
           </span>
-          <span className="font-display tracking-[0.3em] text-white/30">
-                <Link to="/admin" className="hover:text-white">
+          <span className="font-display tracking-[0.3em] text-muted-foreground/40">
+                <Link to="/admin" className="hover:text-orange transition-colors">
                   Admin Panel
                 </Link>
           </span>

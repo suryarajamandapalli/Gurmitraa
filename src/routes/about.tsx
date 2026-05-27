@@ -167,10 +167,10 @@ function About() {
                       </div>
                     </Reveal>
                     <Reveal delay={0.1}>
-                      <div className="bg-navy-deep text-white rounded-3xl p-10 h-full relative overflow-hidden">
-                        <div className="absolute inset-0 grid-bg opacity-40" />
+                      <div className="bg-card border border-border rounded-3xl p-10 h-full relative overflow-hidden text-navy-deep">
+                        <div className="absolute inset-0 grid-bg-light opacity-50" />
                         <div className="relative">
-                          <div className="text-xs uppercase tracking-[0.3em] text-orange mb-4">
+                          <div className="text-xs uppercase tracking-[0.3em] text-orange mb-4 font-semibold">
                             Mission
                           </div>
                           <p className="font-display text-2xl leading-snug">{c.missionText}</p>
@@ -211,13 +211,12 @@ function About() {
             return (
               <section
                 key={section.id}
-                className="py-20 bg-navy-deep text-white relative overflow-hidden"
+                className="py-20 bg-mist text-navy-deep relative overflow-hidden"
               >
-                <div className="absolute inset-0 grid-bg opacity-50" />
+                <div className="absolute inset-0 grid-bg-light opacity-50" />
                 <div className="relative mx-auto max-w-7xl px-6 grid lg:grid-cols-2 gap-16">
                   <div>
                     <SectionHeader
-                      light
                       eyebrow={c.eyebrow}
                       title={
                         <>
@@ -228,13 +227,13 @@ function About() {
                       }
                     />
                     <Reveal delay={0.1}>
-                      <div className="relative aspect-[16/10] mt-8 rounded-2xl overflow-hidden bg-navy-deep border border-white/10">
+                      <div className="relative aspect-[16/10] mt-8 rounded-2xl overflow-hidden bg-mist border border-border">
                         <img
                           src={c.imageUrl || "/images/about_why_us.png"}
                           alt="Our Team Collaborating"
-                          className="w-full h-full object-cover opacity-60"
+                          className="w-full h-full object-cover opacity-80"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-navy-deep via-transparent to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-mist via-transparent to-transparent" />
                       </div>
                     </Reveal>
                   </div>
@@ -246,13 +245,13 @@ function About() {
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: i * 0.05 }}
-                        className="flex items-start gap-4 glass-dark rounded-2xl p-5"
+                        className="flex items-start gap-4 bg-card border border-border rounded-2xl p-5 shadow-sm text-navy-deep"
                       >
                         <Icons.CheckCircle2
                           className="text-orange flex-shrink-0 mt-0.5"
                           size={20}
                         />
-                        <span className="text-white/90">{p}</span>
+                        <span className="text-navy-deep/90">{p}</span>
                       </motion.div>
                     ))}
                   </div>

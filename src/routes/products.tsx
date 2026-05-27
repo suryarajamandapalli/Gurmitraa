@@ -223,12 +223,11 @@ function Products() {
             return (
               <section
                 key={section.id}
-                className="py-20 bg-navy-deep text-white relative overflow-hidden"
+                className="py-20 bg-background text-navy-deep relative overflow-hidden"
               >
-                <div className="absolute inset-0 grid-bg opacity-40" />
+                <div className="absolute inset-0 grid-bg-light opacity-50" />
                 <div className="relative mx-auto max-w-7xl px-6">
                   <SectionHeader
-                    light
                     eyebrow={c.eyebrow}
                     title={
                       <>
@@ -249,7 +248,7 @@ function Products() {
                           viewport={{ once: true }}
                           transition={{ delay: idx * 0.05 }}
                           whileHover={{ scale: 1.05 }}
-                          className="glass-dark rounded-2xl p-6 text-center hover:bg-orange/10 transition"
+                          className="bg-card border border-border rounded-2xl p-6 text-center hover:bg-orange/5 transition shadow-sm text-navy-deep"
                         >
                           <Icon className="text-orange mx-auto mb-3" size={28} />
                           <div className="font-display font-semibold">{ind.t}</div>

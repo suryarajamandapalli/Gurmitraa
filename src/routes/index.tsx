@@ -511,12 +511,11 @@ function Home() {
               <section
                 key={section.id}
                 id={section.id}
-                className="relative py-20 bg-navy-deep text-white overflow-hidden"
+                className="relative py-20 bg-mist text-navy-deep overflow-hidden"
               >
-                <div className="absolute inset-0 grid-bg opacity-50" />
+                <div className="absolute inset-0 grid-bg-light opacity-50" />
                 <div className="relative mx-auto max-w-7xl px-6">
                   <SectionHeader
-                    light
                     eyebrow={c.eyebrow}
                     title={
                       <>
@@ -527,7 +526,7 @@ function Home() {
                     }
                     description={c.description}
                   />
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-white/10 rounded-3xl overflow-hidden">
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-border rounded-3xl overflow-hidden border border-border shadow-sm">
                     {(c.list || []).map((s: any, i: number) => {
                       const Icon = getIcon(s.icon);
                       return (
@@ -537,12 +536,12 @@ function Home() {
                           whileInView={{ opacity: 1, y: 0 }}
                           viewport={{ once: true, margin: "-60px" }}
                           transition={{ delay: i * 0.05, duration: 0.6 }}
-                          className="group relative bg-navy-deep p-8 hover:bg-navy transition-colors duration-500"
+                          className="group relative bg-card p-8 hover:bg-mist transition-colors duration-500 text-navy-deep"
                         >
                           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                           <Icon className="text-orange mb-6" size={32} />
                           <h3 className="font-display text-xl font-semibold mb-2">{s.title}</h3>
-                          <p className="text-sm text-white/60 leading-relaxed">{s.desc}</p>
+                          <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
                           <Link
                             to="/services"
                             className="mt-6 inline-flex items-center gap-1 text-xs uppercase tracking-widest text-orange opacity-0 group-hover:opacity-100 transition-opacity"
@@ -679,12 +678,11 @@ function Home() {
               <section
                 key={section.id}
                 id={section.id}
-                className="relative py-20 bg-navy-deep text-white overflow-hidden"
+                className="relative py-20 bg-background text-navy-deep overflow-hidden"
               >
-                <div className="absolute inset-0 grid-bg opacity-40" />
+                <div className="absolute inset-0 grid-bg-light opacity-50" />
                 <div className="relative mx-auto max-w-7xl px-6">
                   <SectionHeader
-                    light
                     eyebrow={c.eyebrow}
                     title={
                       <>
@@ -702,14 +700,14 @@ function Home() {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: i * 0.1, duration: 0.6 }}
-                        className="glass-dark rounded-3xl p-8"
+                        className="bg-card border border-border rounded-3xl p-8 shadow-sm text-navy-deep"
                       >
                         <Quote className="text-orange mb-4" size={28} />
-                        <p className="font-display text-xl leading-snug text-white/90">"{t.q}"</p>
+                        <p className="font-display text-xl leading-snug text-navy-deep">"{t.q}"</p>
                         <div className="mt-6 flex items-center justify-between">
                           <div>
                             <div className="font-semibold">{t.a}</div>
-                            <div className="text-xs text-white/50 uppercase tracking-widest">
+                            <div className="text-xs text-muted-foreground uppercase tracking-widest">
                               {t.r}
                             </div>
                           </div>
@@ -724,11 +722,11 @@ function Home() {
                   </div>
 
                   {/* Logo strip */}
-                  <div className="mt-16 overflow-hidden border-y border-white/10 py-8">
+                  <div className="mt-16 overflow-hidden border-y border-border py-8">
                     <motion.div
                       animate={{ x: ["0%", "-50%"] }}
                       transition={{ duration: 35, repeat: Infinity, ease: "linear" }}
-                      className="flex gap-16 whitespace-nowrap font-display text-2xl text-white/30 tracking-widest"
+                      className="flex gap-16 whitespace-nowrap font-display text-2xl text-navy-deep/20 tracking-widest"
                     >
                       {Array.from({ length: 2 }).map((_, k) => (
                         <div key={k} className="flex gap-16">
@@ -745,7 +743,7 @@ function Home() {
 
           case "enquiry":
             return (
-              <section key={section.id} id={section.id} className="relative py-20 bg-background overflow-hidden">
+              <section key={section.id} id={section.id} className="relative py-20 bg-mist overflow-hidden">
                 <div className="mx-auto max-w-5xl px-6">
                   <SectionHeader
                     eyebrow={c.eyebrow}

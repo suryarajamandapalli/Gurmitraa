@@ -191,12 +191,11 @@ function Services() {
             return (
               <section
                 key={section.id}
-                className="py-20 bg-navy-deep text-white relative overflow-hidden"
+                className="py-20 bg-mist text-navy-deep relative overflow-hidden"
               >
-                <div className="absolute inset-0 grid-bg opacity-40" />
+                <div className="absolute inset-0 grid-bg-light opacity-50" />
                 <div className="relative mx-auto max-w-7xl px-6">
                   <SectionHeader
-                    light
                     eyebrow={c.eyebrow}
                     title={
                       <>
@@ -215,7 +214,7 @@ function Services() {
                         viewport={{ once: true }}
                         transition={{ delay: i * 0.02 }}
                         whileHover={{ scale: 1.05 }}
-                        className="glass-dark rounded-xl px-5 py-4 text-center font-display font-medium hover:bg-orange/20 hover:border-orange transition"
+                        className="bg-card border border-border rounded-xl px-5 py-4 text-center font-display font-medium text-navy-deep hover:bg-orange/5 hover:border-orange transition shadow-sm"
                       >
                         {tech}
                       </motion.div>
@@ -244,12 +243,12 @@ function Services() {
                       const Icon = getIcon(b.icon);
                       return (
                         <Reveal key={b.t} delay={i * 0.08}>
-                          <div className="relative bg-gradient-to-br from-navy-deep to-navy text-white rounded-3xl p-8 overflow-hidden h-full">
-                            <div className="absolute inset-0 grid-bg opacity-30" />
+                          <div className="relative bg-card border border-border text-navy-deep rounded-3xl p-8 overflow-hidden h-full shadow-sm">
+                            <div className="absolute inset-0 grid-bg-light opacity-50" />
                             <div className="relative">
                               <Icon className="text-orange mb-5" size={28} />
                               <h4 className="font-display text-xl font-semibold mb-2">{b.t}</h4>
-                              <p className="text-sm text-white/60">{b.d}</p>
+                              <p className="text-sm text-muted-foreground">{b.d}</p>
                             </div>
                           </div>
                         </Reveal>

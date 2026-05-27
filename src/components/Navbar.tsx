@@ -27,6 +27,8 @@ export function Navbar() {
 
   useEffect(() => setOpen(false), [pathname]);
 
+  const isDarkHeader = !scrolled && pathname === "/";
+
   return (
     <motion.header
       initial={{ y: -40, opacity: 0 }}
@@ -39,7 +41,9 @@ export function Navbar() {
       <div className="mx-auto max-w-7xl px-6">
         <div
           className={`flex items-center justify-between rounded-2xl px-5 py-3 transition-all duration-500 ${
-            scrolled ? "glass-dark shadow-[0_10px_40px_-15px_rgba(0,0,0,0.5)]" : "bg-transparent"
+            scrolled
+              ? "bg-white/85 backdrop-blur-md border border-white/50 shadow-[0_10px_30px_-10px_rgba(6,5,102,0.08)]"
+              : "bg-transparent"
           }`}
         >
           <Link to="/" className="flex items-center gap-2 group">
@@ -48,7 +52,7 @@ export function Navbar() {
             ) : global.logoUrl ? (
               <>
                 <img src={global.logoUrl} alt={logoText} className="h-8 w-8 object-contain rounded-lg" />
-                <span className={`font-display font-bold tracking-tight text-lg transition-colors ${scrolled || pathname === "/" ? "text-white" : "text-navy-deep"}`}>
+                <span className={`font-display font-bold tracking-tight text-lg transition-colors ${isDarkHeader ? "text-white" : "text-navy-deep"}`}>
                   {logoText}
                 </span>
               </>
@@ -58,7 +62,7 @@ export function Navbar() {
                   <span className="font-display font-bold text-white text-sm">{logoLetter}</span>
                   <div className="absolute inset-0 rounded-lg bg-orange blur-xl opacity-50 group-hover:opacity-80 transition-opacity" />
                 </div>
-                <span className={`font-display font-bold tracking-tight text-lg transition-colors ${scrolled || pathname === "/" ? "text-white" : "text-navy-deep"}`}>
+                <span className={`font-display font-bold tracking-tight text-lg transition-colors ${isDarkHeader ? "text-white" : "text-navy-deep"}`}>
                   {logoText}
                 </span>
               </>
@@ -73,7 +77,7 @@ export function Navbar() {
                   key={l.to}
                   to={l.to}
                   className={`relative px-4 py-2 text-sm font-medium transition-colors ${
-                    scrolled || pathname === "/"
+                    isDarkHeader
                       ? "text-white/70 hover:text-white"
                       : "text-navy-deep/70 hover:text-navy-deep"
                   }`}
@@ -82,7 +86,7 @@ export function Navbar() {
                     <motion.span
                       layoutId="nav-active"
                       className={`absolute inset-0 rounded-full ${
-                        scrolled || pathname === "/"
+                        isDarkHeader
                           ? "bg-white/10"
                           : "bg-navy-deep/5"
                       }`}
@@ -112,7 +116,7 @@ export function Navbar() {
           <button
             onClick={() => setOpen((v) => !v)}
             className={`lg:hidden p-2 transition-colors ${
-              scrolled || pathname === "/" ? "text-white" : "text-navy-deep"
+              isDarkHeader ? "text-white" : "text-navy-deep"
             }`}
             aria-label="Menu"
           >
@@ -127,7 +131,9 @@ export function Navbar() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               className={`lg:hidden mt-2 rounded-2xl p-4 flex flex-col gap-1 ${
-                scrolled || pathname === "/" ? "glass-dark" : "bg-card border border-border shadow-lg text-navy-deep"
+                isDarkHeader
+                  ? "bg-navy-deep/95 backdrop-blur-md text-white border border-white/10 shadow-xl"
+                  : "bg-white/95 backdrop-blur-md border border-border shadow-lg text-navy-deep"
               }`}
             >
               {links.map((l) => (
@@ -137,7 +143,7 @@ export function Navbar() {
                   className={`px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
                     pathname === l.to
                       ? "bg-orange text-white"
-                      : scrolled || pathname === "/"
+                      : isDarkHeader
                         ? "text-white/80 hover:bg-white/5"
                         : "text-navy-deep/80 hover:bg-navy-deep/5"
                   }`}
