@@ -61,15 +61,15 @@ function Services() {
             return (
               <section
                 key={section.id}
-                className="relative -mt-20 pt-36 pb-16 bg-navy-deep text-white overflow-hidden"
+                className="relative -mt-20 pt-36 pb-16 bg-mist text-navy-deep overflow-hidden"
               >
-                <div className="absolute inset-0 grid-bg opacity-60" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(255,122,0,0.3),transparent_55%)]" />
+                <div className="absolute inset-0 grid-bg-light opacity-50" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(255,122,0,0.1),transparent_55%)]" />
                 <div className="relative mx-auto max-w-7xl px-6">
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="text-xs uppercase tracking-[0.3em] text-[#ff9f43] mb-6"
+                    className="text-xs uppercase tracking-[0.3em] text-orange mb-6 font-semibold"
                   >
                     {c.eyebrow}
                   </motion.div>
@@ -77,7 +77,7 @@ function Services() {
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8 }}
-                    className="font-display text-4xl md:text-6xl lg:text-7xl font-bold leading-[0.95] tracking-tight text-balance max-w-5xl"
+                    className="font-display text-4xl md:text-6xl lg:text-7xl font-bold leading-[0.95] tracking-tight text-balance max-w-5xl text-navy-deep"
                   >
                     {c.title}
                     <GradientItalic text={c.titleItalic} />
@@ -87,7 +87,7 @@ function Services() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.4 }}
-                    className="mt-8 max-w-2xl text-lg text-white/70"
+                    className="mt-8 max-w-2xl text-lg text-muted-foreground"
                   >
                     {c.description}
                   </motion.p>

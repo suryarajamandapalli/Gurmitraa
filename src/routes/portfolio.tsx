@@ -74,19 +74,19 @@ function Portfolio() {
             return (
               <section
                 key={section.id}
-                className="relative -mt-20 pt-36 pb-16 bg-navy-deep text-white overflow-hidden"
+                className="relative -mt-20 pt-36 pb-16 bg-mist text-navy-deep overflow-hidden"
               >
-                <div className="absolute inset-0 grid-bg opacity-60" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_right,rgba(255,122,0,0.25),transparent_55%)]" />
+                <div className="absolute inset-0 grid-bg-light opacity-50" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_right,rgba(255,122,0,0.1),transparent_55%)]" />
                 <div className="relative mx-auto max-w-7xl px-6">
-                  <div className="text-xs uppercase tracking-[0.3em] text-[#ff9f43] mb-6">
+                  <div className="text-xs uppercase tracking-[0.3em] text-orange mb-6 font-semibold">
                     {c.eyebrow}
                   </div>
                   <motion.h1
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8 }}
-                    className="font-display text-4xl md:text-6xl lg:text-7xl font-bold leading-[0.95] tracking-tight max-w-5xl text-balance"
+                    className="font-display text-4xl md:text-6xl lg:text-7xl font-bold leading-[0.95] tracking-tight max-w-5xl text-balance text-navy-deep"
                   >
                     {c.title} <GradientItalic text={c.titleItalic} />
                     {c.titleSuffix}

@@ -61,16 +61,16 @@ function About() {
             return (
               <section
                 key={section.id}
-                className="relative -mt-20 bg-navy-deep text-white overflow-hidden pt-36 pb-16"
+                className="relative -mt-20 bg-mist text-navy-deep overflow-hidden pt-36 pb-16"
               >
-                <div className="absolute inset-0 grid-bg opacity-60" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,122,0,0.25),transparent_60%)]" />
+                <div className="absolute inset-0 grid-bg-light opacity-50" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,122,0,0.1),transparent_60%)]" />
                 <div className="relative mx-auto max-w-7xl px-6 grid lg:grid-cols-12 gap-12">
                   <div className="lg:col-span-8">
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="text-xs uppercase tracking-[0.3em] text-[#ff9f43] mb-6"
+                      className="text-xs uppercase tracking-[0.3em] text-orange mb-6 font-semibold"
                     >
                       {c.eyebrow}
                     </motion.div>
@@ -78,7 +78,7 @@ function About() {
                       initial={{ opacity: 0, y: 30 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.8 }}
-                      className="font-display text-4xl md:text-6xl lg:text-7xl font-bold leading-[0.95] tracking-tight text-balance"
+                      className="font-display text-4xl md:text-6xl lg:text-7xl font-bold leading-[0.95] tracking-tight text-balance text-navy-deep"
                     >
                       {c.title}
                       <GradientItalic text={c.titleItalic} />
@@ -90,7 +90,7 @@ function About() {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.4 }}
-                      className="text-white/70 leading-relaxed"
+                      className="text-muted-foreground leading-relaxed"
                     >
                       {c.description}
                     </motion.p>

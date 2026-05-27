@@ -48,7 +48,7 @@ export function Navbar() {
             ) : global.logoUrl ? (
               <>
                 <img src={global.logoUrl} alt={logoText} className="h-8 w-8 object-contain rounded-lg" />
-                <span className="font-display font-bold text-white tracking-tight text-lg">
+                <span className={`font-display font-bold tracking-tight text-lg transition-colors ${scrolled || pathname === "/" ? "text-white" : "text-navy-deep"}`}>
                   {logoText}
                 </span>
               </>
@@ -58,7 +58,7 @@ export function Navbar() {
                   <span className="font-display font-bold text-white text-sm">{logoLetter}</span>
                   <div className="absolute inset-0 rounded-lg bg-orange blur-xl opacity-50 group-hover:opacity-80 transition-opacity" />
                 </div>
-                <span className="font-display font-bold text-white tracking-tight text-lg">
+                <span className={`font-display font-bold tracking-tight text-lg transition-colors ${scrolled || pathname === "/" ? "text-white" : "text-navy-deep"}`}>
                   {logoText}
                 </span>
               </>
@@ -72,12 +72,20 @@ export function Navbar() {
                 <Link
                   key={l.to}
                   to={l.to}
-                  className="relative px-4 py-2 text-sm font-medium text-white/70 hover:text-white transition-colors"
+                  className={`relative px-4 py-2 text-sm font-medium transition-colors ${
+                    scrolled || pathname === "/"
+                      ? "text-white/70 hover:text-white"
+                      : "text-navy-deep/70 hover:text-navy-deep"
+                  }`}
                 >
                   {active && (
                     <motion.span
                       layoutId="nav-active"
-                      className="absolute inset-0 rounded-full bg-white/10"
+                      className={`absolute inset-0 rounded-full ${
+                        scrolled || pathname === "/"
+                          ? "bg-white/10"
+                          : "bg-navy-deep/5"
+                      }`}
                       transition={{ type: "spring", stiffness: 380, damping: 30 }}
                     />
                   )}
@@ -103,7 +111,9 @@ export function Navbar() {
 
           <button
             onClick={() => setOpen((v) => !v)}
-            className="lg:hidden text-white p-2"
+            className={`lg:hidden p-2 transition-colors ${
+              scrolled || pathname === "/" ? "text-white" : "text-navy-deep"
+            }`}
             aria-label="Menu"
           >
             {open ? <X size={22} /> : <Menu size={22} />}
@@ -116,14 +126,20 @@ export function Navbar() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="lg:hidden mt-2 glass-dark rounded-2xl p-4 flex flex-col gap-1"
+              className={`lg:hidden mt-2 rounded-2xl p-4 flex flex-col gap-1 ${
+                scrolled || pathname === "/" ? "glass-dark" : "bg-card border border-border shadow-lg text-navy-deep"
+              }`}
             >
               {links.map((l) => (
                 <Link
                   key={l.to}
                   to={l.to}
-                  className={`px-4 py-3 rounded-xl text-sm font-medium ${
-                    pathname === l.to ? "bg-orange text-white" : "text-white/80 hover:bg-white/5"
+                  className={`px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+                    pathname === l.to
+                      ? "bg-orange text-white"
+                      : scrolled || pathname === "/"
+                        ? "text-white/80 hover:bg-white/5"
+                        : "text-navy-deep/80 hover:bg-navy-deep/5"
                   }`}
                 >
                   {l.label}
