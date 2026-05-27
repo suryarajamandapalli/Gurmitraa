@@ -893,7 +893,7 @@ export const DEFAULT_CONTACT = {
         title: "Our ",
         titleItalic: "studio",
         titleSuffix: " in Bengaluru.",
-        mapIframeUrl: "https://www.google.com/maps?q=Bengaluru,India&z=12&output=embed",
+        mapIframeUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d61048.03499251321!2d81.76260694968217!3d16.99901999182566!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a37a3f2440c9fff%3A0x86b24503e305ca21!2sRajamahendravaram%2C%20Andhra%20Pradesh!5e0!3m2!1sen!2sin!4v1779865721084!5m2!1sen!2sin",
       },
     },
     {

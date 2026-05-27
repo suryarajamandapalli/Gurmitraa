@@ -60,8 +60,10 @@ function Contact() {
     .filter((s: any) => s.active !== false)
     .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0));
 
-  // Find floating contact details (default to settings, fallback to defaults)
-  const phoneClean = (global.footer?.contactDetails?.phone || "+91 98765 43210").replace(
+  // Find floating contact details (default to form section contact, then settings, fallback to defaults)
+  const contactFormSec = sections.find((s: any) => s.id === "form_section");
+  const formPhone = contactFormSec?.content?.phone;
+  const phoneClean = (formPhone || global.footer?.contactDetails?.phone || "+91 9490532121").replace(
     /[^0-9+]/g,
     "",
   );
@@ -124,11 +126,13 @@ function Contact() {
                               c.email ||
                               global.footer?.contactDetails?.email ||
                               "hello@gurmitraa.com",
+                            href: `mailto:${c.email || global.footer?.contactDetails?.email || "hello@gurmitraa.com"}`,
                           },
                           {
                             icon: Icons.Phone,
                             t: "Phone",
                             v: c.phone || global.footer?.contactDetails?.phone || "+91 98765 43210",
+                            href: `tel:${(c.phone || global.footer?.contactDetails?.phone || "+91 98765 43210").replace(/[^0-9+]/g, "")}`,
                           },
                           {
                             icon: Icons.MapPin,
@@ -137,23 +141,30 @@ function Contact() {
                               c.address ||
                               global.footer?.contactDetails?.address ||
                               "Bengaluru, India",
+                            href: undefined,
                           },
-                        ].map((info) => (
-                          <div
-                            key={info.t}
-                            className="flex items-start gap-4 bg-card border border-border rounded-2xl p-5"
-                          >
-                            <div className="h-10 w-10 rounded-xl bg-orange/10 grid place-items-center flex-shrink-0">
-                              <info.icon className="text-orange" size={18} />
-                            </div>
-                            <div className="min-w-0">
-                              <div className="text-xs uppercase tracking-widest text-muted-foreground">
-                                {info.t}
+                        ].map((info) => {
+                          const CardTag = info.href ? "a" : "div";
+                          return (
+                            <CardTag
+                              key={info.t}
+                              {...(info.href ? { href: info.href } : {})}
+                              className={`flex items-start gap-4 bg-card border border-border rounded-2xl p-5 ${
+                                info.href ? "hover:border-orange transition-colors duration-200 cursor-pointer" : ""
+                              }`}
+                            >
+                              <div className="h-10 w-10 rounded-xl bg-orange/10 grid place-items-center flex-shrink-0">
+                                <info.icon className="text-orange" size={18} />
                               </div>
-                              <div className="font-display font-semibold mt-1 break-all">{info.v}</div>
-                            </div>
-                          </div>
-                        ))}
+                              <div className="min-w-0">
+                                <div className="text-xs uppercase tracking-widest text-muted-foreground">
+                                  {info.t}
+                                </div>
+                                <div className="font-display font-semibold mt-1 break-all">{info.v}</div>
+                              </div>
+                            </CardTag>
+                          );
+                        })}
                       </div>
 
                       <div className="flex gap-3 justify-center">
@@ -246,7 +257,7 @@ function Contact() {
         <Icons.MessageCircle size={22} />
       </a>
       <a
-        href="#contact-info"
+        href={`tel:${phoneClean}`}
         className="fixed bottom-24 right-6 z-40 h-14 w-14 rounded-full bg-orange grid place-items-center text-white shadow-xl hover:scale-110 transition"
       >
         <Icons.Phone size={20} />
