@@ -257,7 +257,7 @@ function Contact() {
         <Icons.MessageCircle size={22} />
       </a>
       <a
-        href={`tel:${phoneClean}`}
+        href="#contact-info"
         className="fixed bottom-24 right-6 z-40 h-14 w-14 rounded-full bg-orange grid place-items-center text-white shadow-xl hover:scale-110 transition"
       >
         <Icons.Phone size={20} />
