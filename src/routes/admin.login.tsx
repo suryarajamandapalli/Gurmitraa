@@ -51,7 +51,7 @@ function LoginPage() {
 
 function LoginView() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState("gurmitraa@gmail.com");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -196,7 +196,7 @@ function LoginView() {
 }
 
 function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState("gurmitraa@gmail.com");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
 
