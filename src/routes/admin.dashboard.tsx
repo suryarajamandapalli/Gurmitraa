@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { AdminDashboard } from "./admin";
-import { supabase } from "@/lib/supabase";
+import { subscribeToAdminAuthState, logoutAdmin, ADMIN_EMAIL } from "@/lib/adminAuth";
 
 export const Route = createFileRoute("/admin/dashboard")({
   component: DashboardPage,
@@ -14,11 +14,11 @@ function DashboardPage() {
   const [checking, setChecking] = useState(true);
   const [adminEmail, setAdminEmail] = useState("");
 
-  // Authenticate session on mount via Supabase Auth
+  // Authenticate session via Firebase Auth state listener
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setAdminEmail(session.user.email || "admin@example.com");
+    const unsubscribe = subscribeToAdminAuthState((user) => {
+      if (user) {
+        setAdminEmail(user.email || ADMIN_EMAIL);
         setChecking(false);
       } else {
         toast.error("Please log in to access the administrator panel.");
@@ -26,27 +26,16 @@ function DashboardPage() {
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
-        navigate({ to: "/admin/login", replace: true });
-      } else if (session.user) {
-        setAdminEmail(session.user.email || "admin@example.com");
-        setChecking(false);
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
+    return () => unsubscribe();
   }, [navigate]);
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
+      await logoutAdmin();
       toast.success("Logged out successfully.");
       navigate({ to: "/admin/login", replace: true });
     } catch (err) {
-      toast.error("Logout failed.");
+      toast.error("Logout failed. Please try again.");
     }
   };
 

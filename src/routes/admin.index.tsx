@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import React, { useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { subscribeToAdminAuthState } from "@/lib/adminAuth";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminIndex,
@@ -10,13 +10,15 @@ function AdminIndex() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
+    const unsubscribe = subscribeToAdminAuthState((user) => {
+      if (user) {
         navigate({ to: "/admin/dashboard", replace: true });
       } else {
         navigate({ to: "/admin/login", replace: true });
       }
     });
+
+    return () => unsubscribe();
   }, [navigate]);
 
   return null;

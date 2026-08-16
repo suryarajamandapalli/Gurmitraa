@@ -1,36 +1,37 @@
 {
   "rules": {
-    "settings": {
-      "master_password": {
-        // Only authenticated users with the custom claim `admin: true` can read or write this value
-        ".read": "auth != null && auth.token.admin === true",
-        ".write": "auth != null && auth.token.admin === true"
-      },
-      // Keep other settings restricted to admins as well
-      ".read": "auth != null && auth.token.admin === true",
-      ".write": "auth != null && auth.token.admin === true"
-    },
-
-    // Global site config is publicly readable but only writable by admins
+    // Global site configuration: public read, admin write
     "global": {
       ".read": true,
-      ".write": "auth != null && auth.token.admin === true"
+      ".write": "auth != null"
     },
 
-    // Media may be public, but uploads/changes restricted to admins
+    // Page contents and sections: public read, admin write
+    "pages": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+
+    // Media library assets: public read, admin write
     "media": {
       ".read": true,
-      ".write": "auth != null && auth.token.admin === true"
+      ".write": "auth != null"
     },
 
-    // Submissions are writable by anyone (form posts), but readable only by admins
+    // Contact form submissions: public write (contact form), admin read/delete
     "submissions": {
-      ".read": "auth != null && auth.token.admin === true",
+      ".read": "auth != null",
       ".write": true
     },
 
-    // Default: allow public reads, restrict writes to admins
+    // Site settings: admin only
+    "settings": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+
+    // Default rule: allow public read, require authenticated admin write
     ".read": true,
-    ".write": "auth != null && auth.token.admin === true"
+    ".write": "auth != null"
   }
 }

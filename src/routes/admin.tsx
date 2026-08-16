@@ -55,434 +55,7 @@ import {
   DEFAULT_CONTACT,
 } from "@/lib/cms-defaults";
 import { deepMerge } from "@/lib/cms";
-
-import bcrypt from "bcryptjs";
-import { supabase } from "@/lib/supabase";
-
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://csrcjsddxwykqbbuqerj.supabase.co";
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNzcmNqc2RkeHd5a3FiYnVxZXJqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MzQyNDk4MywiZXhwIjoyMDk5MDAwOTgzfQ.JRSyrWYqggj-K1DRQMhjH0Fx0-Q8utZDg9JsYM3FjrA";
-const RESEND_API_KEY = process.env.RESEND_API_KEY || "re_d1Dt9Dp7_Ht6TNGwvzzPCafXa9DdyMhb4";
-// APP_URL resolution — priority order:
-// 1. VITE_APP_URL / APP_URL — explicit override (set this in Vercel env vars to https://www.gurmitraa.com)
-// 2. VERCEL_PROJECT_PRODUCTION_URL — Vercel's stable canonical production hostname (NOT per-deployment)
-// 3. Hardcoded fallback for local dev
-//
-// IMPORTANT: VERCEL_URL must NOT be used here — it returns the per-deployment preview URL
-// which changes on every deploy and does NOT match the custom domain, causing the reset
-// ?token= parameter to be lost when the browser is on a different origin.
-const APP_URL =
-  process.env.VITE_APP_URL ||
-  process.env.APP_URL ||
-  (process.env.VERCEL_PROJECT_PRODUCTION_URL
-    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-    : "https://gurmitraa-three.vercel.app");
-
-// Create server-side admin client using Service Role Key
-const getSupabaseAdmin = () => createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
-  auth: { autoRefreshToken: false, persistSession: false }
-});
-
-// Send email via Resend
-const sendEmail = async (to: string, subject: string, html: string): Promise<{ ok: boolean; error?: string }> => {
-  console.log("sendEmail() invoked.");
-  console.log(`- Recipient: ${to}`);
-  console.log(`- Subject: ${subject}`);
-  console.log(`- API Key exists: ${!!RESEND_API_KEY}`);
-
-  try {
-    const payload = {
-      from: "GURMITRAA Admin <onboarding@resend.dev>",
-      to: [to],
-      subject,
-      html,
-    };
-    console.log("- Payload:", JSON.stringify(payload, null, 2));
-
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    console.log(`- Resend API HTTP status: ${res.status}`);
-
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      console.error("- Resend error body:", JSON.stringify(body, null, 2));
-      return { ok: false, error: body?.message || `HTTP ${res.status}: Email delivery failed` };
-    }
-
-    console.log("- Resend email sent successfully.");
-    return { ok: true };
-  } catch (err: any) {
-    console.error("- sendEmail exception raised:", err);
-    return { ok: false, error: err?.message || "Unable to send email" };
-  }
-};
-
-// Delete ALL active sessions from Firebase (session invalidation)
-const invalidateAllSessions = async () => {
-  const sessionsRef = ref(db, "sessions");
-  await remove(sessionsRef);
-};
-
-// Seed default administrator if admins table is empty
-const bootstrapAdmin = async () => {
-  const supabaseAdmin = getSupabaseAdmin();
-  try {
-    const { data, error } = await supabaseAdmin.from("admins").select("id").limit(1);
-    if (error) { console.error("bootstrapAdmin query error:", error); return; }
-    if (!data || data.length === 0) {
-      const passwordHash = bcrypt.hashSync("Ganesh@132", bcrypt.genSaltSync(10));
-      await supabaseAdmin.from("admins").insert({
-        email: "gurmitraa@gmail.com",
-        password_hash: passwordHash,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
-    }
-  } catch (err) { console.error("bootstrapAdmin exception:", err); }
-};
-
-/* ---------------------------------------------------------------
-   LOGIN
---------------------------------------------------------------- */
-export const loginServerFn = createServerFn({ method: "POST" })
-  .inputValidator((data: any) => data as { email?: string; password?: string })
-  .handler(async ({ data }) => {
-    const { email, password } = data;
-    if (!email || !password) return { success: false, error: "Please enter both email and password." };
-
-    await bootstrapAdmin();
-
-    const supabaseAdmin = getSupabaseAdmin();
-    const { data: admin, error } = await supabaseAdmin
-      .from("admins").select("*").eq("email", email.trim().toLowerCase()).maybeSingle();
-
-    if (error) {
-      console.error("Supabase admin lookup error:", error);
-      return { 
-        success: false, 
-        error: error.message.includes("does not exist")
-          ? "Database table 'admins' not found. Please verify backend setup."
-          : "Database error during authentication check."
-      };
-    }
-    if (!admin) return { success: false, error: "Invalid email or password." };
-
-    if (!bcrypt.compareSync(password, admin.password_hash))
-      return { success: false, error: "Invalid email or password." };
-
-    const token = crypto.randomUUID();
-    const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 Hours
-    const now = Date.now();
-
-    await set(ref(db, `sessions/${token}`), {
-      admin_id: admin.id,
-      email: admin.email,
-      created_at: now,
-      expires_at: now + SESSION_DURATION_MS,
-    });
-
-    return { success: true, token, email: admin.email };
-  });
-
-/* ---------------------------------------------------------------
-   VERIFY SESSION
---------------------------------------------------------------- */
-export const verifySessionServerFn = createServerFn({ method: "GET" })
-  .handler(async ({ request }) => {
-    const cookieHeader = request.headers.get("cookie") || "";
-    const match = cookieHeader.match(/admin_session=([^;]+)/);
-    const token = match ? match[1] : null;
-    if (!token) return { authenticated: false, reason: "No session token provided" };
-
-    const snapshot = await dbGet(ref(db, `sessions/${token}`));
-    if (!snapshot.exists()) return { authenticated: false, reason: "Session invalid or expired" };
-
-    const sessionData = snapshot.val();
-    if (sessionData.expires_at && Date.now() > sessionData.expires_at) {
-      await remove(ref(db, `sessions/${token}`));
-      return { authenticated: false, reason: "Session expired" };
-    }
-
-    return { authenticated: true, email: sessionData.email };
-  });
-
-/* ---------------------------------------------------------------
-   LOGOUT
---------------------------------------------------------------- */
-export const logoutServerFn = createServerFn({ method: "POST" })
-  .handler(async ({ request }) => {
-    const cookieHeader = request.headers.get("cookie") || "";
-    const match = cookieHeader.match(/admin_session=([^;]+)/);
-    const token = match ? match[1] : null;
-    if (token) await remove(ref(db, `sessions/${token}`));
-    return { success: true };
-  });
-
-/* ---------------------------------------------------------------
-   UPDATE PASSWORD (Security Settings — no current password needed)
-   Invalidates ALL sessions after change.
---------------------------------------------------------------- */
-export const updatePasswordServerFn = createServerFn({ method: "POST" })
-  .inputValidator((data: any) => data as { newPassword?: string })
-  .handler(async ({ data, request }) => {
-    const { newPassword } = data;
-    if (!newPassword || newPassword.length < 8)
-      return { success: false, error: "Password must be at least 8 characters" };
-
-    const cookieHeader = request.headers.get("cookie") || "";
-    const match = cookieHeader.match(/admin_session=([^;]+)/);
-    const token = match ? match[1] : null;
-    if (!token) return { success: false, error: "Unauthorized session" };
-
-    const sessionSnapshot = await dbGet(ref(db, `sessions/${token}`));
-    if (!sessionSnapshot.exists()) return { success: false, error: "Unauthorized session" };
-
-    const session = sessionSnapshot.val();
-    const supabaseAdmin = getSupabaseAdmin();
-
-    const { data: admin, error } = await supabaseAdmin
-      .from("admins").select("id").eq("email", session.email).maybeSingle();
-    if (error || !admin) return { success: false, error: "Administrator record not found" };
-
-    const newPasswordHash = bcrypt.hashSync(newPassword, bcrypt.genSaltSync(10));
-    const { error: updateError } = await supabaseAdmin
-      .from("admins")
-      .update({ password_hash: newPasswordHash, updated_at: new Date().toISOString() })
-      .eq("email", session.email);
-
-    if (updateError) return { success: false, error: updateError.message };
-
-    // Invalidate ALL sessions so the admin must re-login
-    await invalidateAllSessions();
-
-    return { success: true };
-  });
-
-/* ---------------------------------------------------------------
-   REQUEST PASSWORD RESET (Forgot Password)
-   Sends a secure one-time link to the admin's registered email.
---------------------------------------------------------------- */
-export const requestPasswordResetServerFn = createServerFn({ method: "POST" })
-  .inputValidator((data: any) => data as { email?: string })
-  .handler(async ({ data }) => {
-    const { email } = data;
-    // Always return success to avoid revealing if an email exists
-    if (!email) return { success: true };
-
-    const supabaseAdmin = getSupabaseAdmin();
-    const { data: admin } = await supabaseAdmin
-      .from("admins").select("email").eq("email", email.trim().toLowerCase()).maybeSingle();
-
-    if (!admin) {
-      // Don't reveal the account doesn't exist
-      return { success: true };
-    }
-
-    const token = crypto.randomUUID();
-    const expiresAt = Date.now() + 30 * 60 * 1000; // 30 minutes
-
-    await set(ref(db, `reset_tokens/${token}`), {
-      email: admin.email,
-      expires_at: expiresAt,
-      used: false,
-    });
-
-    const resetLink = `${APP_URL}/admin/reset-password?token=${token}`;
-    const html = `
-      <div style="font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;background:#070b13;color:#fff;border-radius:12px;padding:40px;border:1px solid #1e2a3a;">
-        <div style="text-align:center;margin-bottom:32px;">
-          <h1 style="font-size:24px;font-weight:700;letter-spacing:2px;margin:0;color:#fff;">GURMITRAA</h1>
-          <p style="color:#666;font-size:12px;margin:4px 0 0;text-transform:uppercase;letter-spacing:1px;">Admin Password Reset</p>
-        </div>
-        <p style="color:#ccc;font-size:15px;line-height:1.6;margin-bottom:24px;">
-          You requested a password reset for the GURMITRAA administrator account.
-          Click the button below to set a new password. This link is valid for <strong>30 minutes</strong> and can only be used once.
-        </p>
-        <div style="text-align:center;margin:32px 0;">
-          <a href="${resetLink}" style="background:#f97316;color:#fff;font-weight:700;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:15px;display:inline-block;letter-spacing:0.5px;">
-            Reset Password
-          </a>
-        </div>
-        <p style="color:#555;font-size:12px;line-height:1.5;margin-top:32px;border-top:1px solid #1e2a3a;padding-top:20px;">
-          If you did not request this, ignore this email. Your password will not change.<br/>
-          This link expires at ${new Date(expiresAt).toUTCString()}.
-        </p>
-      </div>
-    `;
-
-    const { ok, error: emailError } = await sendEmail(admin.email, "Reset your GURMITRAA admin password", html);
-    if (!ok) {
-      await remove(ref(db, `reset_tokens/${token}`));
-      return { success: false, error: emailError || "Unable to send reset email. Please try again." };
-    }
-
-    return { success: true };
-  });
-
-/* ---------------------------------------------------------------
-   VERIFY RESET TOKEN
---------------------------------------------------------------- */
-export const verifyResetTokenServerFn = createServerFn({ method: "GET" })
-  .inputValidator((data: any) => data as { token?: string })
-  .handler(async ({ data }) => {
-    const { token } = data;
-    if (!token) return { valid: false, error: "Invalid or expired reset token." };
-
-    const snapshot = await dbGet(ref(db, `reset_tokens/${token}`));
-    if (!snapshot.exists()) return { valid: false, error: "Invalid or expired reset token." };
-
-    const record = snapshot.val();
-    if (record.used) return { valid: false, error: "This reset link has already been used." };
-    if (Date.now() > record.expires_at) {
-      await remove(ref(db, `reset_tokens/${token}`));
-      return { valid: false, error: "The reset link has expired. Please request a new one." };
-    }
-
-    return { valid: true };
-  });
-
-/* ---------------------------------------------------------------
-   APPLY PASSWORD RESET
-   Validates token, updates password, invalidates all sessions.
---------------------------------------------------------------- */
-export const applyPasswordResetServerFn = createServerFn({ method: "POST" })
-  .inputValidator((data: any) => data as { token?: string; newPassword?: string })
-  .handler(async ({ data }) => {
-    const { token, newPassword } = data;
-    if (!token || !newPassword) return { success: false, error: "Missing fields" };
-    if (newPassword.length < 8) return { success: false, error: "Password must be at least 8 characters" };
-
-    const snapshot = await dbGet(ref(db, `reset_tokens/${token}`));
-    if (!snapshot.exists()) return { success: false, error: "Invalid or expired reset token." };
-
-    const record = snapshot.val();
-    if (record.used) return { success: false, error: "This reset link has already been used." };
-    if (Date.now() > record.expires_at) {
-      await remove(ref(db, `reset_tokens/${token}`));
-      return { success: false, error: "The reset link has expired. Please request a new one." };
-    }
-
-    const supabaseAdmin = getSupabaseAdmin();
-    const newPasswordHash = bcrypt.hashSync(newPassword, bcrypt.genSaltSync(10));
-
-    const { error: updateError } = await supabaseAdmin
-      .from("admins")
-      .update({ password_hash: newPasswordHash, updated_at: new Date().toISOString() })
-      .eq("email", record.email);
-
-    if (updateError) return { success: false, error: "Failed to update password. Please try again." };
-
-    // Mark token as used then remove it
-    await remove(ref(db, `reset_tokens/${token}`));
-
-    // Invalidate all active sessions
-    await invalidateAllSessions();
-
-    return { success: true };
-  });
-
-/* ---------------------------------------------------------------
-   REQUEST EMAIL CHANGE
-   Sends verification link to the NEW email address.
---------------------------------------------------------------- */
-export const requestEmailChangeServerFn = createServerFn({ method: "POST" })
-  .inputValidator((data: any) => data as { newEmail?: string })
-  .handler(async ({ data, request }) => {
-    const { newEmail } = data;
-    if (!newEmail) return { success: false, error: "Please enter a new email address." };
-
-    const cookieHeader = request.headers.get("cookie") || "";
-    const match = cookieHeader.match(/admin_session=([^;]+)/);
-    const token = match ? match[1] : null;
-    if (!token) return { success: false, error: "Unauthorized session" };
-
-    const sessionSnapshot = await dbGet(ref(db, `sessions/${token}`));
-    if (!sessionSnapshot.exists()) return { success: false, error: "Unauthorized session" };
-
-    const session = sessionSnapshot.val();
-    if (newEmail.trim().toLowerCase() === session.email.toLowerCase())
-      return { success: false, error: "New email must be different from the current email." };
-
-    const verifyToken = crypto.randomUUID();
-    const expiresAt = Date.now() + 30 * 60 * 1000; // 30 minutes
-
-    await set(ref(db, `email_tokens/${verifyToken}`), {
-      current_email: session.email,
-      new_email: newEmail.trim().toLowerCase(),
-      expires_at: expiresAt,
-    });
-
-    const verifyLink = `${APP_URL}/admin/verify-email?token=${verifyToken}`;
-    const html = `
-      <div style="font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;background:#070b13;color:#fff;border-radius:12px;padding:40px;border:1px solid #1e2a3a;">
-        <div style="text-align:center;margin-bottom:32px;">
-          <h1 style="font-size:24px;font-weight:700;letter-spacing:2px;margin:0;color:#fff;">GURMITRAA</h1>
-          <p style="color:#666;font-size:12px;margin:4px 0 0;text-transform:uppercase;letter-spacing:1px;">Email Verification</p>
-        </div>
-        <p style="color:#ccc;font-size:15px;line-height:1.6;margin-bottom:24px;">
-          A request was made to change the administrator email for your GURMITRAA account.
-          Click the button below to verify this email address and complete the change. This link is valid for <strong>30 minutes</strong>.
-        </p>
-        <div style="text-align:center;margin:32px 0;">
-          <a href="${verifyLink}" style="background:#f97316;color:#fff;font-weight:700;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:15px;display:inline-block;letter-spacing:0.5px;">
-            Verify New Email
-          </a>
-        </div>
-        <p style="color:#555;font-size:12px;line-height:1.5;margin-top:32px;border-top:1px solid #1e2a3a;padding-top:20px;">
-          If you did not request this change, ignore this email. Your account email will remain unchanged.<br/>
-          This link expires at ${new Date(expiresAt).toUTCString()}.
-        </p>
-      </div>
-    `;
-
-    const { ok, error: emailError } = await sendEmail(newEmail.trim(), "Verify your new GURMITRAA admin email", html);
-    if (!ok) {
-      await remove(ref(db, `email_tokens/${verifyToken}`));
-      return { success: false, error: emailError || "Unable to send verification email. Please try again." };
-    }
-
-    return { success: true };
-  });
-
-/* ---------------------------------------------------------------
-   VERIFY EMAIL CHANGE
-   Called when the admin clicks the verification link.
---------------------------------------------------------------- */
-export const verifyEmailChangeServerFn = createServerFn({ method: "POST" })
-  .inputValidator((data: any) => data as { token?: string })
-  .handler(async ({ data }) => {
-    const { token } = data;
-    if (!token) return { success: false, error: "Invalid verification link." };
-
-    const snapshot = await dbGet(ref(db, `email_tokens/${token}`));
-    if (!snapshot.exists()) return { success: false, error: "Invalid or expired verification link." };
-
-    const record = snapshot.val();
-    if (Date.now() > record.expires_at) {
-      await remove(ref(db, `email_tokens/${token}`));
-      return { success: false, error: "The verification link has expired. Please request a new one." };
-    }
-
-    const supabaseAdmin = getSupabaseAdmin();
-    const { error: updateError } = await supabaseAdmin
-      .from("admins")
-      .update({ email: record.new_email, updated_at: new Date().toISOString() })
-      .eq("email", record.current_email);
-
-    if (updateError) return { success: false, error: "Failed to update email. Please try again." };
-
-    await remove(ref(db, `email_tokens/${token}`));
-    // Invalidate all sessions since email changed
-    await invalidateAllSessions();
-
-    return { success: true, newEmail: record.new_email };
-  });
+import { changeAdminPassword, formatAuthError } from "@/lib/adminAuth";
 
 
 
@@ -522,10 +95,10 @@ export function AdminDashboard({ adminEmail, onLogout }: { adminEmail: string, o
   const [activeTab, setActiveTab] = useState<"global" | "pages" | "media" | "submissions" | "security">(
     "global",
   );
-  const [globalData, setGlobalData] = useState<any>(null);
+  const [globalData, setGlobalData] = useState<any>(DEFAULT_GLOBAL);
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [mediaItems, setMediaItems] = useState<any[]>([]);
-  const [dbLoading, setDbLoading] = useState(true);
+  const [dbLoading, setDbLoading] = useState(false);
 
   // For media picker feature
   const [mediaPickerTarget, setMediaPickerTarget] = useState<{
@@ -535,8 +108,6 @@ export function AdminDashboard({ adminEmail, onLogout }: { adminEmail: string, o
 
   // Sync real-time settings, submissions, media
   useEffect(() => {
-    setDbLoading(true);
-
     // Sync query parameters to route to correct tab
     const params = new URLSearchParams(window.location.search);
     const tabParam = params.get("tab");
@@ -549,12 +120,15 @@ export function AdminDashboard({ adminEmail, onLogout }: { adminEmail: string, o
       ref(db, "global"),
       (snapshot) => {
         const data = snapshot.val();
-        setGlobalData(deepMerge(DEFAULT_GLOBAL, data));
+        if (data) {
+          setGlobalData(deepMerge(DEFAULT_GLOBAL, data));
+        } else {
+          setGlobalData(DEFAULT_GLOBAL);
+        }
         setDbLoading(false);
       },
       (error) => {
         console.error("Firebase fetch error (global):", error);
-        toast.error(`Database Error: ${error.message}. Loaded defaults.`);
         setGlobalData(DEFAULT_GLOBAL);
         setDbLoading(false);
       }
@@ -817,20 +391,20 @@ export function AdminDashboard({ adminEmail, onLogout }: { adminEmail: string, o
    SECURITY SETTINGS
    ========================================== */
 function ChangePasswordManager() {
-  const navigate = useNavigate();
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // Email change state
-  const [newEmail, setNewEmail] = useState("");
-  const [emailLoading, setEmailLoading] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
-
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentPassword) {
+      toast.error("Please enter your current password.");
+      return;
+    }
     if (newPassword.length < 8) {
       toast.error("New password must be at least 8 characters.");
       return;
@@ -841,40 +415,15 @@ function ChangePasswordManager() {
     }
     setLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) {
-        toast.error(error.message || "Failed to update password.");
-      } else {
-        toast.success("Password updated successfully.");
-        setNewPassword("");
-        setConfirmPassword("");
-      }
+      await changeAdminPassword(currentPassword, newPassword);
+      toast.success("Administrator password updated successfully in Firebase Auth.");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
     } catch (err: any) {
-      toast.error(err?.message || "Failed to update password.");
+      toast.error(formatAuthError(err));
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleEmailChange = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newEmail.trim()) {
-      toast.error("Please enter a new email address.");
-      return;
-    }
-    setEmailLoading(true);
-    try {
-      const { error } = await supabase.auth.updateUser({ email: newEmail.trim() });
-      if (error) {
-        toast.error(error.message || "Failed to update email.");
-      } else {
-        setEmailSent(true);
-        toast.success("Verification link sent to your new email!");
-      }
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to update email.");
-    } finally {
-      setEmailLoading(false);
     }
   };
 
@@ -887,27 +436,60 @@ function ChangePasswordManager() {
             <Lock size={20} />
           </div>
           <div>
-            <h3 className="font-display text-lg font-bold">Change Password</h3>
-            <p className="text-xs text-white/45 mt-0.5">Set a new administrator password. All active sessions will be invalidated.</p>
+            <h3 className="font-display text-lg font-bold">Change Admin Password</h3>
+            <p className="text-xs text-white/45 mt-0.5">
+              Securely update your administrator password in Firebase Authentication.
+            </p>
           </div>
         </div>
 
         <form onSubmit={handleChangePassword} className="space-y-4">
+          {/* Current Password */}
+          <div>
+            <label className="block text-xs uppercase tracking-wider text-white/50 font-semibold mb-2">
+              Current Password
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-4 top-3 text-white/30" size={16} />
+              <input
+                type={showCurrent ? "text" : "password"}
+                required
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Enter current password"
+                className="w-full bg-white/5 border border-white/10 rounded-lg pl-11 pr-11 py-2.5 text-sm text-white focus:border-orange focus:ring-1 focus:ring-orange outline-none transition"
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrent(!showCurrent)}
+                className="absolute right-3 top-2.5 text-white/35 hover:text-white/70 transition p-0.5"
+              >
+                {showCurrent ? <EyeOff size={15} /> : <Eye size={15} />}
+              </button>
+            </div>
+          </div>
+
           {/* New Password */}
           <div>
-            <label className="block text-xs uppercase tracking-wider text-white/50 font-semibold mb-2">New Password</label>
+            <label className="block text-xs uppercase tracking-wider text-white/50 font-semibold mb-2">
+              New Password
+            </label>
             <div className="relative">
               <Lock className="absolute left-4 top-3 text-white/30" size={16} />
               <input
                 type={showNew ? "text" : "password"}
                 required
+                minLength={8}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Min. 8 characters"
                 className="w-full bg-white/5 border border-white/10 rounded-lg pl-11 pr-11 py-2.5 text-sm text-white focus:border-orange focus:ring-1 focus:ring-orange outline-none transition"
               />
-              <button type="button" onClick={() => setShowNew(!showNew)}
-                className="absolute right-3 top-2.5 text-white/35 hover:text-white/70 transition p-0.5">
+              <button
+                type="button"
+                onClick={() => setShowNew(!showNew)}
+                className="absolute right-3 top-2.5 text-white/35 hover:text-white/70 transition p-0.5"
+              >
                 {showNew ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
             </div>
@@ -915,19 +497,25 @@ function ChangePasswordManager() {
 
           {/* Confirm Password */}
           <div>
-            <label className="block text-xs uppercase tracking-wider text-white/50 font-semibold mb-2">Confirm Password</label>
+            <label className="block text-xs uppercase tracking-wider text-white/50 font-semibold mb-2">
+              Confirm New Password
+            </label>
             <div className="relative">
               <Lock className="absolute left-4 top-3 text-white/30" size={16} />
               <input
                 type={showConfirm ? "text" : "password"}
                 required
+                minLength={8}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Repeat new password"
                 className="w-full bg-white/5 border border-white/10 rounded-lg pl-11 pr-11 py-2.5 text-sm text-white focus:border-orange focus:ring-1 focus:ring-orange outline-none transition"
               />
-              <button type="button" onClick={() => setShowConfirm(!showConfirm)}
-                className="absolute right-3 top-2.5 text-white/35 hover:text-white/70 transition p-0.5">
+              <button
+                type="button"
+                onClick={() => setShowConfirm(!showConfirm)}
+                className="absolute right-3 top-2.5 text-white/35 hover:text-white/70 transition p-0.5"
+              >
                 {showConfirm ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
             </div>
@@ -937,78 +525,25 @@ function ChangePasswordManager() {
             <button
               type="submit"
               disabled={loading}
-              className="bg-orange hover:bg-orange/90 disabled:opacity-50 text-white font-semibold py-2.5 px-6 rounded-lg transition flex items-center gap-2 shadow-lg shadow-orange/20"
+              className="bg-orange hover:bg-orange/90 disabled:opacity-50 text-white font-semibold py-2.5 px-6 rounded-lg transition flex items-center gap-2 shadow-lg shadow-orange/20 cursor-pointer"
             >
               {loading ? <RefreshCw className="animate-spin" size={15} /> : <Check size={15} />}
               Update Password
             </button>
             <button
               type="button"
-              onClick={() => { setNewPassword(""); setConfirmPassword(""); }}
+              onClick={() => {
+                setCurrentPassword("");
+                setNewPassword("");
+                setConfirmPassword("");
+              }}
               disabled={loading}
-              className="bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white font-medium py-2.5 px-6 rounded-lg transition"
+              className="bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white font-medium py-2.5 px-6 rounded-lg transition cursor-pointer"
             >
               Cancel
             </button>
           </div>
         </form>
-      </div>
-
-      {/* Change Email */}
-      <div className="bg-white/5 border border-white/10 rounded-xl p-8 shadow-xl">
-        <div className="flex items-center gap-3 mb-7">
-          <div className="h-10 w-10 bg-blue-500/15 rounded-lg flex items-center justify-center text-blue-400">
-            <Mail size={20} />
-          </div>
-          <div>
-            <h3 className="font-display text-lg font-bold">Change Email</h3>
-            <p className="text-xs text-white/45 mt-0.5">A verification link will be sent to the new email address.</p>
-          </div>
-        </div>
-
-        {emailSent ? (
-          <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-5 flex items-start gap-3">
-            <Check className="text-emerald-400 mt-0.5 shrink-0" size={18} />
-            <div>
-              <p className="text-sm font-semibold text-emerald-300">Verification link sent!</p>
-              <p className="text-xs text-white/55 mt-1">
-                A verification link has been sent to <span className="text-white font-semibold">{newEmail}</span>.
-                Click it to confirm the email change. The link expires in 30 minutes.
-              </p>
-              <button
-                onClick={() => { setEmailSent(false); setNewEmail(""); }}
-                className="text-xs text-orange hover:text-orange/80 font-semibold mt-3 transition"
-              >
-                Send to a different address
-              </button>
-            </div>
-          </div>
-        ) : (
-          <form onSubmit={handleEmailChange} className="space-y-4">
-            <div>
-              <label className="block text-xs uppercase tracking-wider text-white/50 font-semibold mb-2">New Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-3 text-white/30" size={16} />
-                <input
-                  type="email"
-                  required
-                  value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
-                  placeholder="new@example.com"
-                  className="w-full bg-white/5 border border-white/10 rounded-lg pl-11 pr-4 py-2.5 text-sm text-white focus:border-blue-400 focus:ring-1 focus:ring-blue-400 outline-none transition"
-                />
-              </div>
-            </div>
-            <button
-              type="submit"
-              disabled={emailLoading}
-              className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-semibold py-2.5 px-6 rounded-lg transition flex items-center gap-2"
-            >
-              {emailLoading ? <RefreshCw className="animate-spin" size={15} /> : <Send size={15} />}
-              Send Verification Link
-            </button>
-          </form>
-        )}
       </div>
     </div>
   );
@@ -1392,8 +927,8 @@ function PagesManager({
   globalData: any;
 }) {
   const [selectedPage, setSelectedPage] = useState<keyof typeof PAGE_CONFIGS>("home");
-  const [pageState, setPageState] = useState<any>(null);
-  const [initialDbData, setInitialDbData] = useState<any>(null);
+  const [pageState, setPageState] = useState<any>(PAGE_CONFIGS.home.defaults);
+  const [initialDbData, setInitialDbData] = useState<any>(PAGE_CONFIGS.home.defaults);
   const [hasUnsaved, setHasUnsaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingSectionIndex, setEditingSectionIndex] = useState<number | null>(null);
@@ -1539,27 +1074,38 @@ function PagesManager({
 
   // Sync real-time page content from database
   useEffect(() => {
-    setPageState(null);
-    setInitialDbData(null);
+    const config = PAGE_CONFIGS[selectedPage];
+    setPageState(config.defaults);
+    setInitialDbData(JSON.parse(JSON.stringify(config.defaults)));
     setHasUnsaved(false);
     setEditingSectionIndex(null);
 
-    const config = PAGE_CONFIGS[selectedPage];
     const pageRef = ref(db, `pages/${selectedPage}`);
 
-    const unsub = onValue(pageRef, (snapshot) => {
-      const data = snapshot.val();
-      const merged = deepMerge(config.defaults, data);
-
-      // Ensure correct section ordering from DB
-      if (merged.sections) {
-        merged.sections.sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0));
+    const unsub = onValue(
+      pageRef,
+      (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          const merged = deepMerge(config.defaults, data);
+          if (merged.sections) {
+            merged.sections.sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0));
+          }
+          setPageState(merged);
+          setInitialDbData(JSON.parse(JSON.stringify(merged)));
+        } else {
+          setPageState(config.defaults);
+          setInitialDbData(JSON.parse(JSON.stringify(config.defaults)));
+        }
+        setHasUnsaved(false);
+      },
+      (error) => {
+        console.error(`Firebase fetch error (pages/${selectedPage}):`, error);
+        setPageState(config.defaults);
+        setInitialDbData(JSON.parse(JSON.stringify(config.defaults)));
+        setHasUnsaved(false);
       }
-
-      setPageState(merged);
-      setInitialDbData(JSON.parse(JSON.stringify(merged))); // deep copy
-      setHasUnsaved(false);
-    });
+    );
 
     return () => unsub();
   }, [selectedPage]);
@@ -1708,10 +1254,10 @@ function PagesManager({
                 layout
                 key={key}
                 draggable
-                onDragStart={(e) => handleDragStart(e, index)}
-                onDragOver={(e) => handleDragOver(e, index)}
+                onDragStart={(e: any) => handleDragStart(e, index)}
+                onDragOver={(e: any) => handleDragOver(e, index)}
                 onDragEnd={handleDragEnd}
-                onDrop={(e) => handleDrop(e, index)}
+                onDrop={(e: any) => handleDrop(e, index)}
                 className={`relative flex items-center gap-2 px-3.5 py-2 rounded-md text-sm font-semibold transition-all select-none ${
                   isSelected
                     ? "bg-orange text-white shadow-md shadow-orange/15"

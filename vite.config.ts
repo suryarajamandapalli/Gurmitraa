@@ -14,13 +14,15 @@ export default defineConfig({
     server: { entry: "server" },
   },
   // During local development forward /api calls to the lightweight dev API server
-  server: {
-    proxy: {
-      "/api": {
-        target: "http://localhost:8787",
-        changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path,
+  vite: {
+    server: {
+      proxy: {
+        "/api": {
+          target: "http://localhost:8787",
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) => path,
+        },
       },
     },
   },

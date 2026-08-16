@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import * as Icons from "lucide-react";
 import {
   Shield,
   Mail,
@@ -12,9 +11,18 @@ import {
   Unlock,
   RefreshCw,
   Check,
+  ArrowLeft,
+  AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
+import {
+  ADMIN_EMAIL,
+  loginAdmin,
+  subscribeToAdminAuthState,
+  sendAdminPasswordReset,
+  getResetCooldownRemaining,
+  formatAuthError,
+} from "@/lib/adminAuth";
 
 export const Route = createFileRoute("/admin/login")({
   component: LoginPage,
@@ -24,15 +32,17 @@ function LoginPage() {
   const navigate = useNavigate();
   const [checking, setChecking] = useState(true);
 
-  // Check if session already exists, redirect to dashboard if so
+  // If already authenticated as admin, route directly to dashboard
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
+    const unsubscribe = subscribeToAdminAuthState((user) => {
+      if (user) {
         navigate({ to: "/admin/dashboard", replace: true });
       } else {
         setChecking(false);
       }
     });
+
+    return () => unsubscribe();
   }, [navigate]);
 
   if (checking) {
@@ -40,7 +50,7 @@ function LoginPage() {
       <div className="flex h-screen items-center justify-center bg-[#070b13] text-white">
         <div className="text-center space-y-4">
           <RefreshCw className="animate-spin text-orange mx-auto" size={48} />
-          <p className="text-white/60 tracking-widest text-sm uppercase">Loading security layer...</p>
+          <p className="text-white/60 tracking-widest text-sm uppercase">Verifying security session...</p>
         </div>
       </div>
     );
@@ -51,7 +61,7 @@ function LoginPage() {
 
 function LoginView() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("gurmitraa@gmail.com");
+  const [email, setEmail] = useState(ADMIN_EMAIL);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -65,21 +75,11 @@ function LoginView() {
     }
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password: password,
-      });
-
-      if (error) {
-        toast.error(error.message || "Invalid email or password.");
-      } else if (data?.session) {
-        toast.success("Welcome back, Administrator!");
-        navigate({ to: "/admin/dashboard", replace: true });
-      } else {
-        toast.error("Authentication failed. Please check your credentials.");
-      }
+      await loginAdmin(email.trim(), password);
+      toast.success("Welcome back, Administrator!");
+      navigate({ to: "/admin/dashboard", replace: true });
     } catch (err: any) {
-      toast.error(err?.message || "Authentication failed. Please try again.");
+      toast.error(formatAuthError(err));
     } finally {
       setLoading(false);
     }
@@ -88,7 +88,7 @@ function LoginView() {
   return (
     <>
       <div className="min-h-screen flex items-center justify-center bg-[#070b13] relative px-4 overflow-hidden">
-        <div className="absolute inset-0 grid-bg opacity-30" />
+        <div className="absolute inset-0 grid-bg opacity-30 pointer-events-none" />
         <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-orange/10 rounded-full blur-[100px] pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-blue-500/10 rounded-full blur-[100px] pointer-events-none" />
 
@@ -164,7 +164,7 @@ function LoginView() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-orange hover:bg-orange/95 disabled:opacity-50 text-white font-semibold py-3.5 rounded-md transition shadow-lg shadow-orange/20 flex items-center justify-center gap-2"
+              className="w-full bg-orange hover:bg-orange/95 disabled:opacity-50 text-white font-semibold py-3.5 rounded-md transition shadow-lg shadow-orange/20 flex items-center justify-center gap-2 cursor-pointer"
             >
               {loading ? (
                 <RefreshCw className="animate-spin" size={18} />
@@ -179,7 +179,7 @@ function LoginView() {
 
           <div className="mt-6 pt-6 border-t border-white/10 text-center">
             <a href="/" className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-white transition">
-              <Icons.ArrowLeft size={16} />
+              <ArrowLeft size={16} />
               <span>Return to Home</span>
             </a>
           </div>
@@ -196,30 +196,45 @@ function LoginView() {
 }
 
 function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
-  const [email, setEmail] = useState("gurmitraa@gmail.com");
+  const [email, setEmail] = useState(ADMIN_EMAIL);
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [cooldown, setCooldown] = useState(getResetCooldownRemaining());
+
+  // Cooldown countdown effect
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const interval = setInterval(() => {
+      const remaining = getResetCooldownRemaining();
+      setCooldown(remaining);
+      if (remaining <= 0) {
+        clearInterval(interval);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [cooldown]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
-      toast.error("Please enter your email address.");
+      toast.error("Please enter your administrator email address.");
       return;
     }
+
+    if (cooldown > 0) {
+      toast.error(`Please wait ${cooldown} seconds before sending another reset request.`);
+      return;
+    }
+
     setLoading(true);
     try {
-      const redirectUrl = `${window.location.origin}/admin/reset-password`;
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: redirectUrl,
-      });
-
-      if (error) {
-        toast.error(error.message || "Failed to send reset email.");
-      } else {
-        setSent(true);
-      }
+      await sendAdminPasswordReset(email.trim());
+      setSent(true);
+      setCooldown(getResetCooldownRemaining());
+      toast.success("Password reset email sent!");
     } catch (err: any) {
-      toast.error(err?.message || "Failed to send reset email.");
+      toast.error(formatAuthError(err));
     } finally {
       setLoading(false);
     }
@@ -248,15 +263,23 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
               <Check size={22} />
             </div>
             <h3 className="font-display text-xl font-bold text-white mb-3">Check Your Inbox</h3>
-            <p className="text-white/55 text-sm leading-relaxed mb-6">
-              If an account exists for <span className="text-white font-semibold">{email}</span>, a password reset email has been sent.
+            <p className="text-white/55 text-sm leading-relaxed mb-4">
+              Password reset email sent to <span className="text-white font-semibold">{email}</span>.
             </p>
+            <p className="text-white/40 text-xs leading-relaxed mb-6">
+              Please check your inbox and follow the secure Firebase link to set your new password.
+            </p>
+            {cooldown > 0 && (
+              <p className="text-orange text-xs font-semibold mb-4">
+                You can request another email in {cooldown}s.
+              </p>
+            )}
             <button
               type="button"
               onClick={onClose}
-              className="w-full bg-orange hover:bg-orange/90 text-white font-semibold py-3 rounded-lg transition"
+              className="w-full bg-orange hover:bg-orange/90 text-white font-semibold py-3 rounded-lg transition cursor-pointer"
             >
-              Close
+              Back to Login
             </button>
           </div>
         ) : (
@@ -265,9 +288,9 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
               <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-orange/10 text-orange mb-3">
                 <KeyRound size={22} />
               </div>
-              <h3 className="font-display text-xl font-bold text-white">Forgot Password?</h3>
+              <h3 className="font-display text-xl font-bold text-white">Reset Admin Password</h3>
               <p className="text-white/55 text-sm mt-2 leading-relaxed">
-                Enter your administrator email to receive a password reset link.
+                Enter your configured administrator email to receive a secure Firebase reset link.
               </p>
             </div>
 
@@ -289,20 +312,33 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
                 </div>
               </div>
 
+              {cooldown > 0 && (
+                <div className="flex items-center gap-2 text-xs text-orange bg-orange/10 border border-orange/20 rounded p-2.5">
+                  <AlertCircle size={14} className="shrink-0" />
+                  <span>Cooldown active: You can request another reset in {cooldown} seconds.</span>
+                </div>
+              )}
+
               <button
                 type="submit"
-                disabled={loading}
-                className="w-full bg-orange hover:bg-orange/90 disabled:opacity-50 text-white font-semibold py-3 rounded-lg transition flex items-center justify-center gap-2"
+                disabled={loading || cooldown > 0}
+                className="w-full bg-orange hover:bg-orange/90 disabled:opacity-50 text-white font-semibold py-3 rounded-lg transition flex items-center justify-center gap-2 cursor-pointer"
               >
-                {loading ? <RefreshCw className="animate-spin" size={16} /> : <Mail size={16} />}
-                <span>Send Reset Link</span>
+                {loading ? (
+                  <RefreshCw className="animate-spin" size={16} />
+                ) : (
+                  <>
+                    <Mail size={16} />
+                    <span>{cooldown > 0 ? `Wait ${cooldown}s` : "Send Reset Link"}</span>
+                  </>
+                )}
               </button>
             </form>
 
             <button
               type="button"
               onClick={onClose}
-              className="w-full mt-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white font-semibold py-2.5 rounded-lg transition text-sm"
+              className="w-full mt-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white font-semibold py-2.5 rounded-lg transition text-sm cursor-pointer"
             >
               Cancel
             </button>

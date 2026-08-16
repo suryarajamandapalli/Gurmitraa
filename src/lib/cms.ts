@@ -8,7 +8,8 @@ import {
   DEFAULT_CONTACT,
 } from "./cms-defaults";
 
-const FIREBASE_DB_URL = "https://gurumitraa-default-rtdb.firebaseio.com";
+const FIREBASE_DB_URL =
+  import.meta.env.VITE_FIREBASE_DATABASE_URL || "https://gurmitraa-2026-default-rtdb.firebaseio.com";
 
 // Helper to perform a deep merge
 export function deepMerge<T extends Record<string, any>>(target: T, source: any): T {
