@@ -10,17 +10,38 @@ import {
 } from "firebase/auth";
 import { auth } from "./firebase";
 
-// Single configuration value for administrator email
-export const ADMIN_EMAIL = (
-  import.meta.env.VITE_ADMIN_EMAIL || "suryarajamandapalli@gmail.com"
-).trim().toLowerCase();
+// Allowed administrator emails (supports comma-separated VITE_ADMIN_EMAILS / VITE_ADMIN_EMAIL with defaults)
+const DEFAULT_ADMIN_EMAILS = [
+  "gurmitraa@gmail.com",
+  "suryarajamandapalli@gmail.com",
+];
+
+const envAdminConfig = (import.meta.env.VITE_ADMIN_EMAILS || import.meta.env.VITE_ADMIN_EMAIL || "")
+  .split(",")
+  .map((e: string) => e.trim().toLowerCase())
+  .filter(Boolean);
+
+export const ADMIN_EMAILS: string[] = envAdminConfig.length > 0
+  ? [...new Set([...envAdminConfig, ...DEFAULT_ADMIN_EMAILS])]
+  : DEFAULT_ADMIN_EMAILS;
+
+export const ADMIN_EMAIL = ADMIN_EMAILS[0];
 
 /**
- * Check if the given Firebase user matches the configured administrator email
+ * Check if the given email is an authorized administrator email
+ */
+export function isAuthorizedEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  const trimmed = email.trim().toLowerCase();
+  return ADMIN_EMAILS.includes(trimmed);
+}
+
+/**
+ * Check if the given Firebase user matches an authorized administrator email
  */
 export function isAdminUser(user: User | null): boolean {
   if (!user || !user.email) return false;
-  return user.email.trim().toLowerCase() === ADMIN_EMAIL;
+  return isAuthorizedEmail(user.email);
 }
 
 /**
@@ -62,7 +83,7 @@ export function formatAuthError(error: any): string {
 
 /**
  * Sign in as administrator.
- * Enforces that only the configured ADMIN_EMAIL is permitted.
+ * Enforces that only authorized administrator accounts are permitted.
  */
 export async function loginAdmin(email: string, pass: string): Promise<User> {
   const trimmedEmail = email.trim().toLowerCase();
@@ -71,8 +92,8 @@ export async function loginAdmin(email: string, pass: string): Promise<User> {
     throw new Error("Please enter both email and password.");
   }
 
-  // Pre-check email against configured admin email to prevent unauthorized sign-ins
-  if (trimmedEmail !== ADMIN_EMAIL) {
+  // Pre-check email against configured admin emails to prevent unauthorized sign-ins
+  if (!isAuthorizedEmail(trimmedEmail)) {
     throw new Error("This account is not authorized to access the Gurmitraa admin portal.");
   }
 
@@ -120,7 +141,7 @@ export function setResetCooldown(): void {
 }
 
 /**
- * Send official Firebase password reset email to the configured administrator
+ * Send official Firebase password reset email to an authorized administrator
  */
 export async function sendAdminPasswordReset(email: string): Promise<void> {
   const trimmed = email.trim().toLowerCase();
@@ -134,8 +155,8 @@ export async function sendAdminPasswordReset(email: string): Promise<void> {
     throw new Error(`Please wait ${remaining} seconds before requesting another reset email.`);
   }
 
-  // For security, only allow requesting reset for the admin email
-  if (trimmed !== ADMIN_EMAIL) {
+  // For security, only allow requesting reset for authorized admin emails
+  if (!isAuthorizedEmail(trimmed)) {
     // Return smoothly to avoid exposing user existence, but do not send
     setResetCooldown();
     return;

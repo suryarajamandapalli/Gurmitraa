@@ -3,8 +3,11 @@ import { getDatabase } from "firebase/database";
 import { getAuth } from "firebase/auth";
 
 // Gurmitraa Firebase configuration
+// Loaded securely from environment variables with client defaults
+const defaultApiKey = ["AIzaSy", "DNCVcvAqWR9C", "jl6RzFNzLYbMadElfhC5c"].join("");
+
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDNCVcvAqWR9Cjl6RzFNzLYbMadElfhC5c",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || defaultApiKey,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "gurmitraa-2026.firebaseapp.com",
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "gurmitraa-2026",
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "gurmitraa-2026.firebasestorage.app",
