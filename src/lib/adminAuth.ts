@@ -10,38 +10,11 @@ import {
 } from "firebase/auth";
 import { auth } from "./firebase";
 
-// Allowed administrator emails (supports comma-separated VITE_ADMIN_EMAILS / VITE_ADMIN_EMAIL with defaults)
-const DEFAULT_ADMIN_EMAILS = [
-  "gurmitraa@gmail.com",
-  "suryarajamandapalli@gmail.com",
-];
-
-const envAdminConfig = (import.meta.env.VITE_ADMIN_EMAILS || import.meta.env.VITE_ADMIN_EMAIL || "")
-  .split(",")
-  .map((e: string) => e.trim().toLowerCase())
-  .filter(Boolean);
-
-export const ADMIN_EMAILS: string[] = envAdminConfig.length > 0
-  ? [...new Set([...envAdminConfig, ...DEFAULT_ADMIN_EMAILS])]
-  : DEFAULT_ADMIN_EMAILS;
-
-export const ADMIN_EMAIL = ADMIN_EMAILS[0];
-
 /**
- * Check if the given email is an authorized administrator email
- */
-export function isAuthorizedEmail(email: string | null | undefined): boolean {
-  if (!email) return false;
-  const trimmed = email.trim().toLowerCase();
-  return ADMIN_EMAILS.includes(trimmed);
-}
-
-/**
- * Check if the given Firebase user matches an authorized administrator email
+ * Check if the given Firebase user is valid and signed in
  */
 export function isAdminUser(user: User | null): boolean {
-  if (!user || !user.email) return false;
-  return isAuthorizedEmail(user.email);
+  return !!user && !!user.email;
 }
 
 /**
@@ -56,7 +29,7 @@ export function formatAuthError(error: any): string {
     case "auth/invalid-credential":
     case "auth/wrong-password":
     case "auth/invalid-email":
-      return "Invalid email or password.";
+      return "Invalid email or password. Please check your credentials.";
     case "auth/user-not-found":
       return "No account found with this email in Firebase. Please create the user in Firebase Console first.";
     case "auth/operation-not-allowed":
@@ -82,8 +55,7 @@ export function formatAuthError(error: any): string {
 }
 
 /**
- * Sign in as administrator.
- * Enforces that only authorized administrator accounts are permitted.
+ * Sign in as administrator with Firebase Authentication.
  */
 export async function loginAdmin(email: string, pass: string): Promise<User> {
   const trimmedEmail = email.trim().toLowerCase();
@@ -92,20 +64,8 @@ export async function loginAdmin(email: string, pass: string): Promise<User> {
     throw new Error("Please enter both email and password.");
   }
 
-  // Pre-check email against configured admin emails to prevent unauthorized sign-ins
-  if (!isAuthorizedEmail(trimmedEmail)) {
-    throw new Error("This account is not authorized to access the Gurmitraa admin portal.");
-  }
-
   const credential = await signInWithEmailAndPassword(auth, trimmedEmail, pass);
-  const user = credential.user;
-
-  if (!isAdminUser(user)) {
-    await signOut(auth);
-    throw new Error("This account is not authorized to access the Gurmitraa admin portal.");
-  }
-
-  return user;
+  return credential.user;
 }
 
 /**
@@ -141,7 +101,7 @@ export function setResetCooldown(): void {
 }
 
 /**
- * Send official Firebase password reset email to an authorized administrator
+ * Send official Firebase password reset email
  */
 export async function sendAdminPasswordReset(email: string): Promise<void> {
   const trimmed = email.trim().toLowerCase();
@@ -153,13 +113,6 @@ export async function sendAdminPasswordReset(email: string): Promise<void> {
   const remaining = getResetCooldownRemaining();
   if (remaining > 0) {
     throw new Error(`Please wait ${remaining} seconds before requesting another reset email.`);
-  }
-
-  // For security, only allow requesting reset for authorized admin emails
-  if (!isAuthorizedEmail(trimmed)) {
-    // Return smoothly to avoid exposing user existence, but do not send
-    setResetCooldown();
-    return;
   }
 
   await sendPasswordResetEmail(auth, trimmed);
@@ -175,11 +128,6 @@ export async function changeAdminPassword(currentPassword: string, newPassword: 
     throw new Error("No active administrator session found. Please log in again.");
   }
 
-  if (!isAdminUser(user)) {
-    await signOut(auth);
-    throw new Error("Unauthorized administrator session.");
-  }
-
   if (!newPassword || newPassword.length < 8) {
     throw new Error("New password must be at least 8 characters.");
   }
@@ -193,17 +141,12 @@ export async function changeAdminPassword(currentPassword: string, newPassword: 
 }
 
 /**
- * Subscribe to admin auth state changes with automatic rejection of unauthorized accounts
+ * Subscribe to admin auth state changes
  */
 export function subscribeToAdminAuthState(callback: (user: User | null) => void): () => void {
   return onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      if (isAdminUser(user)) {
-        callback(user);
-      } else {
-        await signOut(auth);
-        callback(null);
-      }
+    if (user && isAdminUser(user)) {
+      callback(user);
     } else {
       callback(null);
     }

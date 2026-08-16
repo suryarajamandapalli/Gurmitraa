@@ -9,7 +9,6 @@ import {
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import {
-  ADMIN_EMAIL,
   sendAdminPasswordReset,
   getResetCooldownRemaining,
   formatAuthError,
@@ -23,7 +22,7 @@ function ResetPasswordPage() {
   const navigate = useNavigate();
   const [oobCode, setOobCode] = useState<string | null>(null);
   const [status, setStatus] = useState<"checking" | "confirm_form" | "request_form" | "invalid">("checking");
-  const [targetEmail, setTargetEmail] = useState(ADMIN_EMAIL);
+  const [targetEmail, setTargetEmail] = useState("");
   
   // Confirmation state
   const [newPassword, setNewPassword] = useState("");
@@ -44,7 +43,7 @@ function ResetPasswordPage() {
       setOobCode(code);
       verifyPasswordResetCode(auth, code)
         .then((email) => {
-          setTargetEmail(email || ADMIN_EMAIL);
+          setTargetEmail(email || "");
           setStatus("confirm_form");
         })
         .catch(() => {

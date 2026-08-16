@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { AdminDashboard } from "./admin";
-import { subscribeToAdminAuthState, logoutAdmin, ADMIN_EMAIL } from "@/lib/adminAuth";
+import { subscribeToAdminAuthState, logoutAdmin } from "@/lib/adminAuth";
 
 export const Route = createFileRoute("/admin/dashboard")({
   component: DashboardPage,
@@ -18,7 +18,7 @@ function DashboardPage() {
   useEffect(() => {
     const unsubscribe = subscribeToAdminAuthState((user) => {
       if (user) {
-        setAdminEmail(user.email || ADMIN_EMAIL);
+        setAdminEmail(user.email || "Administrator");
         setChecking(false);
       } else {
         toast.error("Please log in to access the administrator panel.");

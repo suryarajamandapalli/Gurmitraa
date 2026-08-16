@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import {
-  ADMIN_EMAIL,
   loginAdmin,
   subscribeToAdminAuthState,
   sendAdminPasswordReset,
@@ -61,7 +60,7 @@ function LoginPage() {
 
 function LoginView() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState(ADMIN_EMAIL);
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -196,7 +195,7 @@ function LoginView() {
 }
 
 function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
-  const [email, setEmail] = useState(ADMIN_EMAIL);
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [cooldown, setCooldown] = useState(getResetCooldownRemaining());
