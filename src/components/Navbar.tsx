@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { DEFAULT_GLOBAL } from "@/lib/cms-defaults";
-import { deepMerge, subscribeToGlobalChanges } from "@/lib/cms";
+import { subscribeToGlobalChanges } from "@/lib/cms";
 
 export function Navbar() {
   const rootData = useLoaderData({ from: "__root__" }) as { globalSettings: typeof DEFAULT_GLOBAL };
@@ -16,7 +16,6 @@ export function Navbar() {
   }, [rootData]);
 
   useEffect(() => {
-    // Subscribe to live global updates
     const unsub = subscribeToGlobalChanges((data) => {
       if (data) setGlobal(data);
     });
@@ -26,10 +25,18 @@ export function Navbar() {
 
   const logoText = global.logo || "GURMITRAA";
   const logoLetter = logoText.charAt(0).toUpperCase();
-  const navLinks = global.navbar || DEFAULT_GLOBAL.navbar;
-  const links: { to: string; label: string }[] = (navLinks || [])
-    .filter((l: any) => !l.hidden)
+  
+  const rawNav = Array.isArray(global.navbar) && global.navbar.length > 0
+    ? global.navbar
+    : DEFAULT_GLOBAL.navbar;
+
+  const parsedLinks = (rawNav || [])
+    .filter((l: any) => l && !l.hidden && l.label && l.href)
     .map((l: any) => ({ to: l.href, label: l.label }));
+
+  const links: { to: string; label: string }[] = parsedLinks.length > 0
+    ? parsedLinks
+    : DEFAULT_GLOBAL.navbar.map((l) => ({ to: l.href, label: l.label }));
 
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [scrolled, setScrolled] = useState(false);
@@ -57,8 +64,8 @@ export function Navbar() {
         <div
           className={`flex items-center justify-between rounded-2xl px-5 py-3 transition-all duration-500 ${
             scrolled
-              ? "bg-white/95 backdrop-blur-md border border-white/80 shadow-[0_10px_30px_-10px_rgba(6,5,102,0.12)]"
-              : "bg-white/80 backdrop-blur-md border border-white/60 shadow-[0_10px_30px_-10px_rgba(6,5,102,0.06)]"
+              ? "bg-white/95 backdrop-blur-md border border-slate-200/80 shadow-[0_10px_30px_-10px_rgba(6,5,102,0.12)]"
+              : "bg-white/90 backdrop-blur-md border border-slate-200/60 shadow-[0_10px_30px_-10px_rgba(6,5,102,0.06)]"
           }`}
         >
           <Link to="/" className="flex items-center gap-2 group">
@@ -67,7 +74,7 @@ export function Navbar() {
             ) : global.logoUrl ? (
               <>
                 <img src={global.logoUrl} alt={logoText} className="h-8 w-8 object-contain rounded-lg" />
-                <span className="font-display font-bold tracking-tight text-lg text-navy-deep">
+                <span className="font-display font-bold tracking-tight text-lg text-[#0b1120]">
                   {logoText}
                 </span>
               </>
@@ -77,7 +84,7 @@ export function Navbar() {
                   <span className="font-display font-bold text-white text-sm">{logoLetter}</span>
                   <div className="absolute inset-0 rounded-lg bg-orange blur-xl opacity-50 group-hover:opacity-80 transition-opacity" />
                 </div>
-                <span className="font-display font-bold tracking-tight text-lg text-navy-deep">
+                <span className="font-display font-bold tracking-tight text-lg text-[#0b1120]">
                   {logoText}
                 </span>
               </>
@@ -94,7 +101,7 @@ export function Navbar() {
                   className={`relative px-4 py-2 text-sm font-medium transition-colors ${
                     active
                       ? "text-orange font-semibold"
-                      : "text-navy-deep/80 hover:text-navy-deep hover:text-orange"
+                      : "text-slate-800 hover:text-orange"
                   }`}
                 >
                   {active && (
@@ -126,7 +133,7 @@ export function Navbar() {
 
           <button
             onClick={() => setOpen((v) => !v)}
-            className="lg:hidden p-2 text-navy-deep transition-colors"
+            className="lg:hidden p-2 text-slate-800 hover:text-orange transition-colors"
             aria-label="Menu"
           >
             {open ? <X size={22} /> : <Menu size={22} />}
@@ -139,7 +146,7 @@ export function Navbar() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="lg:hidden mt-2 rounded-2xl p-4 flex flex-col gap-1 bg-white/95 backdrop-blur-md border border-border shadow-lg text-navy-deep"
+              className="lg:hidden mt-2 rounded-2xl p-4 flex flex-col gap-1 bg-white/95 backdrop-blur-md border border-slate-200 shadow-lg text-slate-900"
             >
               {links.map((l) => (
                 <Link
@@ -148,12 +155,19 @@ export function Navbar() {
                   className={`px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
                     pathname === l.to
                       ? "bg-orange text-white"
-                      : "text-navy-deep/80 hover:bg-navy-deep/5"
+                      : "text-slate-800 hover:bg-slate-100 hover:text-orange"
                   }`}
                 >
                   {l.label}
                 </Link>
               ))}
+              <Link
+                to="/contact"
+                hash="enquiry"
+                className="mt-2 w-full text-center rounded-xl bg-orange py-3 text-sm font-semibold text-white shadow-lg shadow-orange/20"
+              >
+                Start a project →
+              </Link>
             </motion.div>
           )}
         </AnimatePresence>

@@ -63,7 +63,9 @@ function Contact() {
     return () => unsub();
   }, []);
 
-  const sections = page.sections || DEFAULT_CONTACT.sections;
+  const sections = (Array.isArray(page.sections) && page.sections.length > 0)
+    ? page.sections
+    : DEFAULT_CONTACT.sections;
 
   // Reorder and filter active sections
   const activeSections = [...sections]

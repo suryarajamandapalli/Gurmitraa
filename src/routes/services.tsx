@@ -54,7 +54,9 @@ function Services() {
     return () => unsub();
   }, []);
 
-  const sections = page.sections || DEFAULT_SERVICES.sections;
+  const sections = (Array.isArray(page.sections) && page.sections.length > 0)
+    ? page.sections
+    : DEFAULT_SERVICES.sections;
 
   // Reorder and filter active sections
   const activeSections = [...sections]

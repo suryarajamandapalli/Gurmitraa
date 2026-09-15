@@ -49,7 +49,9 @@ function Portfolio() {
     return () => unsub();
   }, []);
 
-  const sections = page.sections || DEFAULT_PORTFOLIO.sections;
+  const sections = (Array.isArray(page.sections) && page.sections.length > 0)
+    ? page.sections
+    : DEFAULT_PORTFOLIO.sections;
 
   // Find sections content
   const heroSection = sections.find((s: any) => s.id === "hero");
