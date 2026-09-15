@@ -287,12 +287,9 @@ const SERVICES_LIST = [
   { label: "Other", icon: Icons.MoreHorizontal },
 ];
 
-const BUDGET_LIST = ["< $10k", "$10k - $30k", "$30k - $60k", "$60k+"];
-
 function ContactForm() {
   const [step, setStep] = useState(1);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
-  const [selectedBudget, setSelectedBudget] = useState<string>("");
   const [company, setCompany] = useState("");
   const [message, setMessage] = useState("");
   const [name, setName] = useState("");
@@ -318,7 +315,7 @@ function ContactForm() {
     setStep((prev) => prev - 1);
   };
 
-  const isStep1Valid = selectedServices.length > 0 && selectedBudget !== "";
+  const isStep1Valid = selectedServices.length > 0;
   const isStep2Valid = message.trim().length > 0;
   const isStep3Valid =
     name.trim().length > 0 && email.trim().includes("@") && phone.trim().length > 0;
@@ -343,7 +340,6 @@ function ContactForm() {
       phone: phone.trim(),
       company: company.trim(),
       service: selectedServices.join(", "),
-      budget: selectedBudget,
       message: message.trim(),
       timestamp: Date.now(),
     };
@@ -378,7 +374,6 @@ function ContactForm() {
           onClick={() => {
             setStep(1);
             setSelectedServices([]);
-            setSelectedBudget("");
             setCompany("");
             setMessage("");
             setName("");
@@ -447,31 +442,6 @@ function ContactForm() {
                     >
                       <Icon size={18} className={`flex-shrink-0 ${isSelected ? "text-orange" : ""}`} />
                       <span className="text-sm min-w-0 break-words">{s.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div>
-              <span className="text-xs uppercase tracking-widest text-muted-foreground block mb-3">
-                Estimated budget range
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {BUDGET_LIST.map((b) => {
-                  const isSelected = selectedBudget === b;
-                  return (
-                    <button
-                      key={b}
-                      type="button"
-                      onClick={() => setSelectedBudget(b)}
-                      className={`px-5 py-2.5 rounded-full text-sm font-medium border transition select-none ${
-                        isSelected
-                          ? "bg-navy-deep text-white border-navy-deep"
-                          : "bg-background border-border text-muted-foreground hover:border-orange hover:text-navy-deep"
-                      }`}
-                    >
-                      {b}
                     </button>
                   );
                 })}
