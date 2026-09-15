@@ -68,7 +68,6 @@ export function verifySessionToken(token, secret) {
     .update(dataToSign)
     .digest("base64url");
 
-  // Constant-time signature comparison
   const expectedBuf = Buffer.from(expectedSignature);
   const receivedBuf = Buffer.from(receivedSignature);
 

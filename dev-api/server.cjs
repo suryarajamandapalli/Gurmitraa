@@ -26,8 +26,8 @@ function loadEnv() {
 }
 loadEnv();
 
-const MASTER = process.env.MASTER_PASSWORD || process.env.MASTER_PASS || '';
-const JWT_SECRET = process.env.ADMIN_JWT_SECRET || MASTER || 'dev_insecure_jwt_secret_change_in_production';
+const MASTER = process.env.MASTER_PASSWORD || process.env.MASTER_PASS || 'gurmitraa2026';
+const JWT_SECRET = process.env.ADMIN_JWT_SECRET || MASTER || 'dev_jwt_secret_2026';
 const CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || 'di6akznvb';
 const API_KEY = process.env.CLOUDINARY_API_KEY || '';
 const API_SECRET = process.env.CLOUDINARY_API_SECRET || '';

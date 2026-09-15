@@ -9,7 +9,7 @@
  */
 
 import crypto from "crypto";
-import { authenticateRequest } from "./auth-utils.js";
+import { authenticateRequest } from "./_utils/auth-utils.js";
 
 const ALLOWED_PATHS = new Set([
   "global",

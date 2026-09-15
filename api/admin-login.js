@@ -1,4 +1,4 @@
-import { createSessionToken, getJwtSecret, getMasterPassword } from "./auth-utils.js";
+import { createSessionToken, getJwtSecret, getMasterPassword } from "./_utils/auth-utils.js";
 
 async function parseBody(req) {
   if (req instanceof Request || (req && typeof req.json === "function")) {

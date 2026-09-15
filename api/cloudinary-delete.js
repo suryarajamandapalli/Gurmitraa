@@ -1,5 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
-import { authenticateRequest } from "./auth-utils.js";
+import { authenticateRequest } from "./_utils/auth-utils.js";
 
 function getCloudinaryConfig(env) {
   const cloud_name =

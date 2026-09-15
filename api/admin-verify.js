@@ -1,4 +1,4 @@
-import { authenticateRequest } from "./auth-utils.js";
+import { authenticateRequest } from "./_utils/auth-utils.js";
 
 export default async function handler(req, res) {
   // Edge runtime
