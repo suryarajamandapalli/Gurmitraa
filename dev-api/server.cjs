@@ -29,8 +29,8 @@ loadEnv();
 const MASTER = process.env.MASTER_PASSWORD || process.env.MASTER_PASS || 'gurmitraa2026';
 const JWT_SECRET = process.env.ADMIN_JWT_SECRET || MASTER || 'dev_jwt_secret_2026';
 const CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || 'di6akznvb';
-const API_KEY = process.env.CLOUDINARY_API_KEY || '';
-const API_SECRET = process.env.CLOUDINARY_API_SECRET || '';
+const API_KEY = process.env.CLOUDINARY_API_KEY || '416568366319934';
+const API_SECRET = process.env.CLOUDINARY_API_SECRET || 'GiTf5EZPmJoJE1FuqvU49zL4mzE';
 const DEFAULT_FOLDER = process.env.CLOUDINARY_UPLOAD_FOLDER || 'gurmitraa';
 
 if (API_KEY && API_SECRET) {

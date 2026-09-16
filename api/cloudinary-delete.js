@@ -8,10 +8,12 @@ function getCloudinaryConfig(env) {
     "di6akznvb";
   const api_key =
     env?.CLOUDINARY_API_KEY ||
-    process.env.CLOUDINARY_API_KEY;
+    process.env.CLOUDINARY_API_KEY ||
+    "416568366319934";
   const api_secret =
     env?.CLOUDINARY_API_SECRET ||
-    process.env.CLOUDINARY_API_SECRET;
+    process.env.CLOUDINARY_API_SECRET ||
+    "GiTf5EZPmJoJE1FuqvU49zL4mzE";
 
   return { cloud_name, api_key, api_secret };
 }
